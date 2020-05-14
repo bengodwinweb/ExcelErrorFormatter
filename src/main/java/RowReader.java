@@ -72,8 +72,6 @@ public class RowReader {
                 resultRow = resultRows.get(fileName);
                 resultRow.getEvents().add(event);
             }
-
-
         }
 
         return new ArrayList<>(resultRows.values());

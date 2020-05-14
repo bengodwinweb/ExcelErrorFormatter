@@ -10,13 +10,6 @@ public class SheetWriter {
     public static final int NUM_HEADER_ROWS = 3;
     public static final int DATE_COL = 0;
     public static final int FILE_COL = Main.FILE_COL;
-    public static final int NO_06A_COL = 2;
-    public static final int _06A_COL = 3;
-    public static final int _005_COL = 6;
-    public static final int _031_COL = 9;
-    public static final int _065_COL = 12;
-    public static final int _066_COL = 15;
-    public static final int _067_COL = 18;
     public static final int NUM_COLS = Main.BunoErrors.get(Main.BunoErrors.size() - 2).getEndCol() + 1;
     public static IndexedColors headerColor = IndexedColors.PALE_BLUE;
 
@@ -29,9 +22,9 @@ public class SheetWriter {
     private Row thirdRow;
     private Row footerRow;
 
-    public SheetWriter(Workbook wb, String sheetName, List<CustomRowData> rowData) {
+    public SheetWriter(Workbook wb, String bunoName, List<CustomRowData> rowData) {
         this.wb = wb;
-        this.sheet = wb.createSheet("BUNO - " + sheetName);
+        this.sheet = wb.createSheet("BUNO - " + bunoName);
         this.rowData = rowData;
 
         firstRow = sheet.createRow(0);
@@ -122,12 +115,12 @@ public class SheetWriter {
 
         List<CellRangeAddress> cellRangeAddresses = new ArrayList<>();
 
-        // Draw thick border around header and fill in light borders
-        CellRangeAddress header = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, NUM_COLS - 1);
+        // Draw thick border around outside and fill in light borders
+        CellRangeAddress header = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, NUM_COLS - 1); // all of header region
         cellRangeAddresses.add(header);
-        cellRangeAddresses.addAll(createRange(DATE_COL, DATE_COL));
-        cellRangeAddresses.addAll(createRange(FILE_COL, FILE_COL));
-        for (BunoError e : Main.BunoErrors) cellRangeAddresses.addAll(createRange(e));
+        cellRangeAddresses.addAll(createRange(DATE_COL, DATE_COL)); // around date header, footer, and body cols
+        cellRangeAddresses.addAll(createRange(FILE_COL, FILE_COL)); // around file header, footer, and body cols
+        for (BunoError e : Main.BunoErrors) cellRangeAddresses.addAll(createRange(e)); // around the header, footer, and body cols for each error group
 
         for (CellRangeAddress range : cellRangeAddresses) {
             pt.drawBorders(range, BorderStyle.MEDIUM, BorderExtent.OUTSIDE);
@@ -141,45 +134,51 @@ public class SheetWriter {
         CellStyle dateStyle = wb.createCellStyle();
         dateStyle.setDataFormat(wb.getCreationHelper().createDataFormat().getFormat("m/d/yy"));
 
+        // light fill for body cols
         CellStyle lightCountCellStyle = wb.createCellStyle();
         lightCountCellStyle.setAlignment(HorizontalAlignment.CENTER);
 
+        // dark fill for body cols
         CellStyle darkCountCellStyle = wb.createCellStyle();
         darkCountCellStyle.setAlignment(HorizontalAlignment.CENTER);
         darkCountCellStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         darkCountCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
+        // add contents to body rows
         for (int i = 0; i < rowData.size(); i++) {
             Row row = sheet.createRow(i + NUM_HEADER_ROWS);
             addRowContents(row, rowData.get(i));
             row.getCell(DATE_COL).setCellStyle(dateStyle);
-            for (int j = NO_06A_COL; j < NUM_COLS; j++) {
-                if (j < _005_COL) row.getCell(j).setCellStyle(darkCountCellStyle);
-                else if (j < _031_COL) row.getCell(j).setCellStyle(lightCountCellStyle);
-                else if (j < _065_COL) row.getCell(j).setCellStyle(darkCountCellStyle);
-                else if (j < _066_COL) row.getCell(j).setCellStyle(lightCountCellStyle);
-                else if (j < _067_COL) row.getCell(j).setCellStyle(darkCountCellStyle);
+            row.getCell(FILE_COL + 1).setCellStyle(darkCountCellStyle); // set No_06A body columns to dark fill
+
+            // starting with dark, alternate dark and light every three cols
+            int count = 0;
+            for (int j = FILE_COL + 2; j < NUM_COLS; j++) {
+                if ((count / 3) % 2 == 0) row.getCell(j).setCellStyle(darkCountCellStyle);
                 else row.getCell(j).setCellStyle(lightCountCellStyle);
+                count++;
             }
         }
 
         sheet.autoSizeColumn(DATE_COL);
         sheet.autoSizeColumn(FILE_COL);
 
-        for (int i = NO_06A_COL; i < NUM_COLS; i++) {
-            char colChar = (char) ('A' + i);
-            String sumColFormula = "SUM(" + colChar + (NUM_HEADER_ROWS + 1) + ":" + colChar + (footerRow.getRowNum()) + ")";
+        // set the formulas for the footer row
+        for (int i = FILE_COL + 1; i < NUM_COLS; i++) {
+            char colChar = (char) ('A' + i); // get the char for the current column
+            String sumColFormula = "SUM(" + colChar + (NUM_HEADER_ROWS + 1) + ":" + colChar + (footerRow.getRowNum()) + ")"; // sum from first body row to last body row in the current column
             footerRow.getCell(i).setCellFormula(sumColFormula);
         }
     }
 
+    // set the data from current rowData object to the current row
     private void addRowContents(Row row, CustomRowData rowData) {
-        row.createCell(DATE_COL).setCellValue(rowData.getDate());
-        row.createCell(FILE_COL).setCellValue(rowData.getFileName());
-        boolean[] events = rowData.getEventArray();
+        row.createCell(DATE_COL).setCellValue(rowData.getDate()); // col 0 - date
+        row.createCell(FILE_COL).setCellValue(rowData.getFileName()); // col 1 - file name
+        boolean[] events = rowData.getEventArray(); // for every other col - put a 1 if events[col] == true, blank if false
         for (int i = 0; i < events.length; i++) {
-            if (events[i]) row.createCell(i + NO_06A_COL).setCellValue(1);
-            else row.createCell(i + NO_06A_COL);
+            if (events[i]) row.createCell(i + FILE_COL + 1).setCellValue(1);
+            else row.createCell(i + FILE_COL + 1);
         }
     }
 
