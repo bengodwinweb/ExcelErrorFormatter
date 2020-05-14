@@ -159,8 +159,8 @@ public class SheetWriter {
     private void makeSumTable() {
         int firstBodyRow = FIRST_TABLE_ROW + 2;
 
-        CellStyle turquoiseHeaderStyle = createHeaderStyle(IndexedColors.TURQUOISE);
-        CellStyle coralHeaderStyle = createHeaderStyle(IndexedColors.CORAL);
+        CellStyle turquoiseHeaderStyle = createHeaderStyle(IndexedColors.PALE_BLUE);
+        CellStyle coralHeaderStyle = createHeaderStyle(Main.BunoErrors.get(0).getColor());
 
         for (int i = FIRST_TABLE_ROW; i <= LAST_TABLE_ROW; i++) {
             Row row = sheet.getRow(i);
@@ -173,22 +173,32 @@ public class SheetWriter {
             }
         }
 
-        secondRow.getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
-        secondRow.getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
+        // Set text for static cells
+//        secondRow.getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
+//        secondRow.getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
+        sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
+        sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
+        sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL).setCellValue("Month");
+        sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL + 1).setCellValue("Flights");
+        sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL + 2).setCellValue("Pre-Flight");
+        sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL + 3).setCellValue("In-Flight");
+        sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL + 4).setCellValue("Post-Flight");
+        sheet.getRow(LAST_TABLE_ROW).getCell(FIRST_TABLE_COL).setCellValue("Total:");
 
+
+        // Merge cells in first header row
         sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), FIRST_TABLE_COL, FIRST_TABLE_COL + 1));
         sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), FIRST_TABLE_COL + 2, LAST_TABLE_COL));
 
+
+        // Get start and end month
         DateTime endMonth = new DateTime().minusMonths(1).dayOfMonth().withMinimumValue().withTimeAtStartOfDay();
         DateTime startMonth = new DateTime(endMonth).minusMonths(NUM_MONTHS);
-
-//        DateTimeFormatter dtf = DateTimeFormat.forPattern("M/d/yy");
-//        System.out.println("Start month = " + dtf.print(startMonth));
-//        System.out.println("End month = " + dtf.print(endMonth));
 
         CellStyle dateStyle = wb.createCellStyle();
         dateStyle.setDataFormat(wb.getCreationHelper().createDataFormat().getFormat("mmm-yy"));
 
+        // populate first column in body with month formatted "Jan-19"
         for (int i = 0; i <= NUM_MONTHS; i++) {
             DateTime month = new DateTime(startMonth).plusMonths(i);
             Cell cell = sheet.getRow(i + firstBodyRow).getCell(FIRST_TABLE_COL);
