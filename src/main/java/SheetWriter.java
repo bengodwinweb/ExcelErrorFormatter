@@ -52,6 +52,7 @@ public class SheetWriter {
         makeSumTable();
         makeFormulas();
         makeBorders();
+        deleteColumns();
     }
 
     private void makeHeaderAndFooter() {
@@ -159,7 +160,7 @@ public class SheetWriter {
     private void makeSumTable() {
         int firstBodyRow = FIRST_TABLE_ROW + 2;
 
-        CellStyle turquoiseHeaderStyle = createHeaderStyle(IndexedColors.PALE_BLUE);
+        CellStyle turquoiseHeaderStyle = createHeaderStyle(IndexedColors.LIGHT_TURQUOISE);
         CellStyle coralHeaderStyle = createHeaderStyle(Main.BunoErrors.get(0).getColor());
 
         for (int i = FIRST_TABLE_ROW; i <= LAST_TABLE_ROW; i++) {
@@ -280,5 +281,30 @@ public class SheetWriter {
         cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cellStyle.setFillForegroundColor(color.getIndex());
         return cellStyle;
+    }
+
+    private void deleteColumns() {
+        FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+        evaluator.evaluateAll();
+
+        List<BunoError> errorsToDelete = new ArrayList<>();
+
+        for (int i = 1; i < Main.BunoErrors.size() - 2; i++) {
+            BunoError e = Main.BunoErrors.get(i);
+
+            int preFlightTotal = (int) footerRow.getCell(e.getStartCol()).getNumericCellValue();
+            int inFlightTotal =  (int) footerRow.getCell(e.getStartCol() + 1).getNumericCellValue();
+            int postFlightTotal = (int) footerRow.getCell(e.getStartCol() + 2).getNumericCellValue();
+
+//            System.out.println(sheet.getSheetName() + ", error: " + e.getCode() + " pre: " + preFlightTotal + " in: " + inFlightTotal + " post: " + postFlightTotal);
+            if (preFlightTotal == 0 && preFlightTotal == inFlightTotal && preFlightTotal == postFlightTotal) {
+                System.out.println("Delete error " + e.getCode());
+                errorsToDelete.add(e);
+            }
+        }
+
+        for (BunoError e : errorsToDelete) {
+            System.out.println("Delete error " + e.getCode());
+        }
     }
 }

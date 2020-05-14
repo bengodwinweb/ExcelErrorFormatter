@@ -10,25 +10,46 @@ public class Main {
     public static List<BunoError> BunoErrors;
 
     static {
-        BunoError error06A = new BunoError("06A", FILE_COL + 2, FILE_COL + 2 + 2, IndexedColors.CORAL);
-        BunoError error005 = new BunoError("005", error06A.getEndCol() + 1, error06A.getEndCol() + 3, IndexedColors.LIGHT_GREEN);
-        BunoError error031 = new BunoError("031", error005.getEndCol() + 1, error005.getEndCol() + 3, IndexedColors.LIGHT_CORNFLOWER_BLUE);
-        BunoError error064 = new BunoError("064", error031.getEndCol() + 1, error031.getEndCol() + 3, IndexedColors.PLUM);
-        BunoError error065 = new BunoError("065", error064.getEndCol() + 1, error064.getEndCol() + 3, IndexedColors.LIGHT_YELLOW);
-//        BunoError error065 = new BunoError("065", error031.getEndCol() + 1, error031.getEndCol() + 3, IndexedColors.LIGHT_YELLOW);
-        BunoError error066 = new BunoError("066", error065.getEndCol() + 1, error065.getEndCol() + 3, IndexedColors.LIGHT_ORANGE);
-        BunoError error067 = new BunoError("067", error066.getEndCol() + 1, error066.getEndCol() + 3, IndexedColors.LIGHT_TURQUOISE);
-        BunoError error02A = new BunoError("02A", error067.getEndCol() + 1, error067.getEndCol() + 3, IndexedColors.LIGHT_GREEN);
-        BunoError error02C = new BunoError("02C", error02A.getEndCol() + 1, error02A.getEndCol() + 3, IndexedColors.LIGHT_CORNFLOWER_BLUE);
-        BunoError error2A1 = new BunoError("2A1", error02C.getEndCol() + 1, error02C.getEndCol() + 3, IndexedColors.LIGHT_YELLOW);
-        BunoError error2A2 = new BunoError("2A2", error2A1.getEndCol() + 1, error2A1.getEndCol() + 3, IndexedColors.LIGHT_ORANGE);
-        BunoError error2A3 = new BunoError("2A3", error2A2.getEndCol() + 1, error2A2.getEndCol() + 3, IndexedColors.LIGHT_TURQUOISE);
+        int noErrCol = FILE_COL + 1;
+        int firstErrCol = noErrCol + 1;
+        List<IndexedColors> colors = Arrays.asList(IndexedColors.CORAL, IndexedColors.LIGHT_GREEN, IndexedColors.CORNFLOWER_BLUE, IndexedColors.LIGHT_YELLOW, IndexedColors.LIGHT_ORANGE, IndexedColors.LIGHT_TURQUOISE);
 
+        BunoError error06A = new BunoError("06A");
+        BunoError error005 = new BunoError("005");
+        BunoError error031 = new BunoError("031");
+        BunoError error064 = new BunoError("064");
+        BunoError error065 = new BunoError("065");
+        BunoError error066 = new BunoError("066");
+        BunoError error067 = new BunoError("067");
+        BunoError error02A = new BunoError("02A");
+        BunoError error02C = new BunoError("02C");
+        BunoError error2A1 = new BunoError("2A1");
+        BunoError error2A2 = new BunoError("2A2");
+        BunoError error2A3 = new BunoError("2A3");
 
-        BunoErrors = new ArrayList<>(Arrays.asList(error06A, error005, error031, error064, error065, error066, error067, error02A, error02C, error2A1, error2A2, error2A3));
-//        BunoErrors = new ArrayList<>(Arrays.asList(error06A, error005, error031, error065, error066, error067));
+        BunoErrors = new ArrayList<>(Arrays.asList(
+                error06A,
+                error005,
+                error031,
+                error064,
+                error065,
+                error066,
+                error067,
+                error02A,
+                error02C,
+                error2A1,
+                error2A2,
+                error2A3
+        ));
 
-        BunoError errorNoCode1 = new BunoError("No " + BunoErrors.get(0).getCode(), FILE_COL + 1, FILE_COL + 1, IndexedColors.PLUM);
+        for (int i = 0; i < BunoErrors.size(); i++) {
+            BunoError e = BunoErrors.get(i);
+            e.setStartCol(i * 3 + firstErrCol);
+            e.setEndCol(e.getStartCol() + 2);
+            e.setColor(colors.get(i % colors.size()));
+        }
+
+        BunoError errorNoCode1 = new BunoError("No " + BunoErrors.get(0).getCode(), noErrCol, noErrCol, IndexedColors.PLUM);
         BunoErrors.add(errorNoCode1);
     }
 
@@ -50,7 +71,7 @@ public class Main {
                     break;
                 }
             }
-            if (removeFrom != -1) while(wb.getNumberOfSheets() - 1 >= removeFrom) wb.removeSheetAt(removeFrom);
+            if (removeFrom != -1) while (wb.getNumberOfSheets() - 1 >= removeFrom) wb.removeSheetAt(removeFrom);
 
             // get the first sheet in the workbook
             Sheet sheet = wb.getSheetAt(0);

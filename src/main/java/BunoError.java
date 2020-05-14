@@ -15,6 +15,10 @@ public class BunoError {
         this.color = color;
     }
 
+    public BunoError(String code) {
+        this.code = code;
+    }
+
     public String getCode() {
         return code;
     }
