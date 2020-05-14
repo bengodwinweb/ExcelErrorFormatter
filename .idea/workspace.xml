@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ed95ef18-99c4-47d3-bfb9-cb9ced0f0a18" name="Default Changelist" comment="" />
+    <list default="true" id="ed95ef18-99c4-47d3-bfb9-cb9ced0f0a18" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/BunoError.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BunoError.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Reader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Reader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/RowReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/RowReader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/SheetWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/SheetWriter.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -22,6 +29,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="MavenImportPreferences">
     <option name="importingSettings">
       <MavenImportingSettings>
@@ -30,6 +40,7 @@
     </option>
   </component>
   <component name="ProjectId" id="1bpTpmxmkAGKlfyCvwbUWcEJ2Fv" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
@@ -90,7 +101,7 @@
       <option name="presentableId" value="Default" />
       <updated>1589328222153</updated>
       <workItem from="1589328226601" duration="18320000" />
-      <workItem from="1589375031967" duration="30144000" />
+      <workItem from="1589375031967" duration="35106000" />
     </task>
     <servers />
   </component>
@@ -106,30 +117,30 @@
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="609" y="198" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1589331020566" />
-    <state x="796" y="259" key="#com.intellij.ide.util.MemberChooser" timestamp="1589407845125">
+    <state x="796" y="259" key="#com.intellij.ide.util.MemberChooser" timestamp="1589414380775">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state x="796" y="259" key="#com.intellij.ide.util.MemberChooser/0.23.1680.1027@0.23.1680.1027" timestamp="1589407845125" />
+    <state x="796" y="259" key="#com.intellij.ide.util.MemberChooser/0.23.1680.1027@0.23.1680.1027" timestamp="1589414380775" />
     <state x="417" y="23" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1589395341003">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="417" y="23" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1589395341003" />
-    <state width="1351" height="198" key="GridCell.Tab.0.bottom" timestamp="1589410823373">
+    <state width="1351" height="198" key="GridCell.Tab.0.bottom" timestamp="1589418141947">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="198" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1589410823373" />
-    <state width="1351" height="198" key="GridCell.Tab.0.center" timestamp="1589410823370">
+    <state width="1351" height="198" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1589418141947" />
+    <state width="1351" height="198" key="GridCell.Tab.0.center" timestamp="1589418141946">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="198" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1589410823370" />
-    <state width="1351" height="198" key="GridCell.Tab.0.left" timestamp="1589410823369">
+    <state width="1351" height="198" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1589418141946" />
+    <state width="1351" height="198" key="GridCell.Tab.0.left" timestamp="1589418141945">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="198" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1589410823369" />
-    <state width="1351" height="198" key="GridCell.Tab.0.right" timestamp="1589410823371">
+    <state width="1351" height="198" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1589418141945" />
+    <state width="1351" height="198" key="GridCell.Tab.0.right" timestamp="1589418141947">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="198" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1589410823371" />
+    <state width="1351" height="198" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1589418141947" />
     <state x="394" y="181" width="1216" height="753" key="SettingsEditor" timestamp="1589330857360">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>

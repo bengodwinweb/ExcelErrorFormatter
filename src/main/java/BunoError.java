@@ -1,3 +1,4 @@
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.IndexedColors;
 
 public class BunoError {
@@ -5,6 +6,7 @@ public class BunoError {
     private int startCol;
     private int endCol;
     private IndexedColors color;
+    private CellStyle cellStyle;
 
     public BunoError(String code, int startCol, int endCol, IndexedColors color) {
         this.code = code;
@@ -43,5 +45,13 @@ public class BunoError {
 
     public void setColor(IndexedColors color) {
         this.color = color;
+    }
+
+    public CellStyle getCellStyle() {
+        return cellStyle;
+    }
+
+    public void setCellStyle(CellStyle cellStyle) {
+        this.cellStyle = cellStyle;
     }
 }

@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SheetWriter {
-    public static final int FIRST_ROW = 9;
     public static final int NUM_HEADER_ROWS = 3;
     public static final int DATE_COL = 0;
     public static final int FILE_COL = Main.FILE_COL;
@@ -17,15 +16,8 @@ public class SheetWriter {
     public static final int _065_COL = 12;
     public static final int _066_COL = 15;
     public static final int _067_COL = 18;
-    public static final int NUM_COLS = 21;
+    public static final int NUM_COLS = Main.BunoErrors.get(Main.BunoErrors.size() - 2).getEndCol() + 1;
     public static IndexedColors headerColor = IndexedColors.PALE_BLUE;
-    public static IndexedColors No_06A_Color = IndexedColors.PLUM;
-    public static IndexedColors _06A_Color = IndexedColors.CORAL;
-    public static IndexedColors _005_Color = IndexedColors.LIGHT_GREEN;
-    public static IndexedColors _031_Color = IndexedColors.LIGHT_CORNFLOWER_BLUE;
-    public static IndexedColors _065_Color = IndexedColors.LIGHT_YELLOW;
-    public static IndexedColors _066_Color = IndexedColors.LIGHT_ORANGE;
-    public static IndexedColors _067_Color = IndexedColors.LIGHT_TURQUOISE;
 
     private Workbook wb;
     private Sheet sheet;
@@ -34,7 +26,7 @@ public class SheetWriter {
     private Row firstRow;
     private Row secondRow;
     private Row thirdRow;
-    private Row totalsRow;
+    private Row footerRow;
 
     public SheetWriter(Workbook wb, String sheetName, List<CustomRowData> rowData) {
         this.wb = wb;
@@ -44,7 +36,7 @@ public class SheetWriter {
         firstRow = sheet.createRow(0);
         secondRow = sheet.createRow(1);
         thirdRow = sheet.createRow(2);
-        totalsRow = sheet.createRow(NUM_HEADER_ROWS + rowData.size());
+        footerRow = sheet.createRow(NUM_HEADER_ROWS + rowData.size());
     }
 
     public void makeSheet() {
@@ -54,100 +46,70 @@ public class SheetWriter {
     }
 
     private void makeHeaderAndFooter() {
+        // Font for the header and footer cells - set bold to true
         Font headerFont = wb.createFont();
         headerFont.setBold(true);
 
+        // style for all header and footer cells that are not for a specific error - background is PALE_BLUE
         CellStyle headerStyle = wb.createCellStyle();
         headerStyle.setFillForegroundColor(headerColor.getIndex());
+        headerStyle.setFont(headerFont);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        CellStyle no06AheaderStyle = wb.createCellStyle();
-        no06AheaderStyle.setFillForegroundColor(No_06A_Color.getIndex());
-
-        CellStyle _06AheaderStyle = wb.createCellStyle();
-        _06AheaderStyle.setFillForegroundColor(_06A_Color.getIndex());
-
-        CellStyle _005headerStyle = wb.createCellStyle();
-        _005headerStyle.setFillForegroundColor(_005_Color.getIndex());
-
-        CellStyle _031headerStyle = wb.createCellStyle();
-        _031headerStyle.setFillForegroundColor(_031_Color.getIndex());
-
-        CellStyle _065headerStyle = wb.createCellStyle();
-        _065headerStyle.setFillForegroundColor(_065_Color.getIndex());
-
-        CellStyle _066headerStyle = wb.createCellStyle();
-        _066headerStyle.setFillForegroundColor(_066_Color.getIndex());
-
-        CellStyle _067headerStyle = wb.createCellStyle();
-        _067headerStyle.setFillForegroundColor(_067_Color.getIndex());
-
-        for (CellStyle cellStyle : Arrays.asList(headerStyle, no06AheaderStyle, _06AheaderStyle, _005headerStyle, _031headerStyle, _065headerStyle, _066headerStyle, _067headerStyle)) {
+        // set the style for header and footer cells related to each error - get background color from the error
+        for (BunoError e : Main.BunoErrors) {
+            CellStyle cellStyle = wb.createCellStyle();
             cellStyle.setFont(headerFont);
             cellStyle.setAlignment(HorizontalAlignment.CENTER);
             cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cellStyle.setFillForegroundColor(e.getColor().getIndex());
+            e.setCellStyle(cellStyle);
         }
 
-//        firstRow = sheet.createRow(0);
-//        secondRow = sheet.createRow(1);
-//        thirdRow = sheet.createRow(2);
-//        totalsRow = sheet.createRow(NUM_HEADER_ROWS + rowData.size());
-        List<Row> styledRows = Arrays.asList(secondRow, thirdRow, totalsRow);
-        for (int i = 0; i < NUM_COLS; i++) {
-            firstRow.createCell(i).setCellStyle(headerStyle);
-            if (i < NO_06A_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(headerStyle);
-            } else if (i == NO_06A_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(no06AheaderStyle);
-            } else if (i < _005_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(_06AheaderStyle);
-            } else if (i < _031_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(_005headerStyle);
-            } else if (i < _065_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(_031headerStyle);
-            } else if (i < _066_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(_065headerStyle);
-            } else if (i < _067_COL) {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(_066headerStyle);
-            } else {
-                for (Row row : styledRows) row.createCell(i).setCellStyle(_067headerStyle);
+        // create all cells in the first row and set the style to header style (there are no error specific cells in the first row)
+        for (int i = 0; i < NUM_COLS; i++) firstRow.createCell(i).setCellStyle(headerStyle);
+
+        // styling for second, third, and footer rows
+        List<Row> styledRows = Arrays.asList(secondRow, thirdRow, footerRow);
+        // set the first two cells to header style
+        for (int i = 0; i <= FILE_COL; i++) {
+            for (Row row : styledRows) row.createCell(i).setCellStyle(headerStyle);
+        }
+        // go through the errors and set the style for each col within the error's range to that error's style
+        for (BunoError e : Main.BunoErrors) {
+            for (int i = e.getStartCol(); i <= e.getEndCol(); i++) {
+                for (Row row : styledRows) row.createCell(i).setCellStyle(e.getCellStyle());
             }
         }
+
+        // set the values for cells that are not variable
         firstRow.getCell(DATE_COL).setCellValue("Date");
         firstRow.getCell(FILE_COL).setCellValue("File");
-        firstRow.getCell(NO_06A_COL).setCellValue("MSP Codes");
-        secondRow.getCell(_06A_COL).setCellValue("06A");
-        secondRow.getCell(_005_COL).setCellValue("005");
-        secondRow.getCell(_031_COL).setCellValue("031");
-        secondRow.getCell(_065_COL).setCellValue("065");
-        secondRow.getCell(_066_COL).setCellValue("066");
-        secondRow.getCell(_067_COL).setCellValue("067");
-        secondRow.getCell(NO_06A_COL).setCellValue("No 06A");
+        firstRow.getCell(FILE_COL + 1).setCellValue("MSP Codes");
+        footerRow.getCell(DATE_COL).setCellValue("TOTAL:");
 
-        for (int i = _06A_COL; i < NUM_COLS; i++) {
-            if (i % 3 == 0) thirdRow.getCell(i).setCellValue("Pre-Flight");
-            if (i % 3 == 1) thirdRow.getCell(i).setCellValue("In-Flight");
-            if (i % 3 == 2) thirdRow.getCell(i).setCellValue("Post-Flight");
+        // set the values for the Error Code headers in the second row
+        for (BunoError e : Main.BunoErrors) secondRow.getCell(e.getStartCol()).setCellValue(e.getCode());
+
+        // set the values for the third row under the error code header - Pre-Flight then In-Flight then Post-Flight for each (except No_06A)
+        for (int i = Main.BunoErrors.get(0).getStartCol(); i < NUM_COLS; i++) {
+            if (i % 3 == (Main.BunoErrors.get(0).getStartCol() % 3)) thirdRow.getCell(i).setCellValue("Pre-Flight");
+            if (i % 3 == ((Main.BunoErrors.get(0).getStartCol() + 1) % 3)) thirdRow.getCell(i).setCellValue("In-Flight");
+            if (i % 3 == ((Main.BunoErrors.get(0).getStartCol() + 2) % 3)) thirdRow.getCell(i).setCellValue("Post-Flight");
         }
-
-        totalsRow.getCell(FILE_COL).setCellValue("TOTAL:");
-        totalsRow.getCell(FILE_COL).setCellStyle(headerStyle);
-
-//        for (int i = NO_06A_COL; i < NUM_COLS; i++) {
-//            char colChar = (char) ('A' + i);
-//            String sumColFormula = "SUM(" + colChar + (NUM_HEADER_ROWS + 1) + ":" + colChar + (totalsRow.getRowNum()) + ")";
-//            totalsRow.getCell(i).setCellFormula(sumColFormula);
-//        }
 
         sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), NUM_HEADER_ROWS - 1, DATE_COL, DATE_COL));
         sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), NUM_HEADER_ROWS - 1, FILE_COL, FILE_COL));
-        sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), firstRow.getRowNum(), NO_06A_COL, NUM_COLS - 1));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), NO_06A_COL, NO_06A_COL));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), _06A_COL, _005_COL - 1));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), _005_COL, _031_COL - 1));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), _031_COL, _065_COL - 1));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), _065_COL, _066_COL - 1));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), _066_COL, _067_COL - 1));
-        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), _067_COL, NUM_COLS - 1));
+        sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), firstRow.getRowNum(), FILE_COL + 1, NUM_COLS - 1));
+        sheet.addMergedRegion(new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), DATE_COL, FILE_COL));
+
+        for (int i = 0; i < Main.BunoErrors.size() - 1; i++) {
+            BunoError e = Main.BunoErrors.get(i);
+            sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), e.getStartCol(), e.getEndCol()));
+        }
+
+        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), Main.BunoErrors.get(Main.BunoErrors.size() - 1).getStartCol(), Main.BunoErrors.get(Main.BunoErrors.size() - 1).getEndCol()));
     }
 
     private void makeBorders() {
@@ -159,40 +121,40 @@ public class SheetWriter {
         pt.drawBorders(header, BorderStyle.THIN, BorderExtent.INSIDE);
 
         CellRangeAddress dateTimeHeaderRange = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, DATE_COL);
-        CellRangeAddress dateTimeFooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), DATE_COL, DATE_COL);
-        CellRangeAddress dateTimeColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, DATE_COL, DATE_COL);
+        CellRangeAddress dateTimeFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), DATE_COL, DATE_COL);
+        CellRangeAddress dateTimeColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, DATE_COL, DATE_COL);
 
         CellRangeAddress fileHeaderRange = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), FILE_COL, FILE_COL);
-        CellRangeAddress fileFooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), FILE_COL, FILE_COL);
-        CellRangeAddress fileColRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, FILE_COL, FILE_COL);
+        CellRangeAddress fileFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), FILE_COL, FILE_COL);
+        CellRangeAddress fileColRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, FILE_COL, FILE_COL);
 
         CellRangeAddress no06AHeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), NO_06A_COL, NO_06A_COL);
-        CellRangeAddress no06AFooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), NO_06A_COL, NO_06A_COL);
-        CellRangeAddress no06AColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, NO_06A_COL, NO_06A_COL);
+        CellRangeAddress no06AFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), NO_06A_COL, NO_06A_COL);
+        CellRangeAddress no06AColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, NO_06A_COL, NO_06A_COL);
 
         CellRangeAddress _06AHeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _06A_COL, _005_COL - 1);
-        CellRangeAddress _06AFooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), _06A_COL, _005_COL - 1);
-        CellRangeAddress _06AColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, _06A_COL, _005_COL - 1);
+        CellRangeAddress _06AFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _06A_COL, _005_COL - 1);
+        CellRangeAddress _06AColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _06A_COL, _005_COL - 1);
 
         CellRangeAddress _005HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _005_COL, _031_COL - 1);
-        CellRangeAddress _005FooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), _005_COL, _031_COL - 1);
-        CellRangeAddress _005ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, _005_COL, _031_COL - 1);
+        CellRangeAddress _005FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _005_COL, _031_COL - 1);
+        CellRangeAddress _005ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _005_COL, _031_COL - 1);
 
         CellRangeAddress _031HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _031_COL, _065_COL - 1);
-        CellRangeAddress _031FooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), _031_COL, _065_COL - 1);
-        CellRangeAddress _031ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, _031_COL, _065_COL - 1);
+        CellRangeAddress _031FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _031_COL, _065_COL - 1);
+        CellRangeAddress _031ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _031_COL, _065_COL - 1);
 
         CellRangeAddress _065HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _065_COL, _066_COL - 1);
-        CellRangeAddress _065FooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), _065_COL, _066_COL - 1);
-        CellRangeAddress _065ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, _065_COL, _066_COL - 1);
+        CellRangeAddress _065FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _065_COL, _066_COL - 1);
+        CellRangeAddress _065ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _065_COL, _066_COL - 1);
 
         CellRangeAddress _066HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _066_COL, _067_COL - 1);
-        CellRangeAddress _066FooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), _066_COL, _067_COL - 1);
-        CellRangeAddress _066ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, _066_COL, _067_COL - 1);
+        CellRangeAddress _066FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _066_COL, _067_COL - 1);
+        CellRangeAddress _066ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _066_COL, _067_COL - 1);
 
         CellRangeAddress _067HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _067_COL, NUM_COLS - 1);
-        CellRangeAddress _067FooterRange = new CellRangeAddress(totalsRow.getRowNum(), totalsRow.getRowNum(), _067_COL, NUM_COLS - 1);
-        CellRangeAddress _067ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, totalsRow.getRowNum() - 1, _067_COL, NUM_COLS - 1);
+        CellRangeAddress _067FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _067_COL, NUM_COLS - 1);
+        CellRangeAddress _067ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _067_COL, NUM_COLS - 1);
 
         for (CellRangeAddress range : Arrays.asList(
                 dateTimeHeaderRange, dateTimeFooterRange, dateTimeColsRange,
@@ -243,8 +205,8 @@ public class SheetWriter {
 
         for (int i = NO_06A_COL; i < NUM_COLS; i++) {
             char colChar = (char) ('A' + i);
-            String sumColFormula = "SUM(" + colChar + (NUM_HEADER_ROWS + 1) + ":" + colChar + (totalsRow.getRowNum()) + ")";
-            totalsRow.getCell(i).setCellFormula(sumColFormula);
+            String sumColFormula = "SUM(" + colChar + (NUM_HEADER_ROWS + 1) + ":" + colChar + (footerRow.getRowNum()) + ")";
+            footerRow.getCell(i).setCellFormula(sumColFormula);
         }
     }
 

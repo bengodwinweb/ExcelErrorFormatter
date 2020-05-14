@@ -3,10 +3,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class RowReader {
-    public static final ArrayList<String> EVENT_CODES = new ArrayList<>(Arrays.asList("06A", "005", "031", "065", "066", "067"));
-//    public static final List<String> EVENT_CODES = Main.BunoErrors.stream().map(BunoError::getCode).collect(Collectors.toList());
+//    public static final ArrayList<String> EVENT_CODES = new ArrayList<>(Arrays.asList("06A", "005", "031", "065", "066", "067"));
+    public static final List<String> EVENT_CODES = Main.BunoErrors.stream().map(BunoError::getCode).collect(Collectors.toList());
 
     private Sheet sheet;
     private List<Integer> rows;

@@ -20,7 +20,7 @@ public class Main {
 
 
         BunoErrors = new ArrayList<>(Arrays.asList(error06A, error005, error031, error065, error066, error067));
-        BunoErrors.add(error06A);
+        BunoErrors.add(errorNo06A);
     }
 
     public static void main(String[] args) {
@@ -30,38 +30,26 @@ public class Main {
         // read values from current workbook;
         try (InputStream inputStream = new FileInputStream(inputFileFolder + sourceName)) {
             Workbook wb = WorkbookFactory.create(inputStream);
-//
-//            for (int i = 0; i < wb.getNumberOfSheets(); i++) {
-//                Sheet sheet = wb.getSheetAt(i);
-//                if (sheet.getSheetName().contains("BUNO")) {
-//                    System.out.println("Removing sheet " + sheet.getSheetName());
-//                    wb.removeSheetAt(i);
-//                }
-//            }
 
-            System.out.println("Number of sheets: " + wb.getNumberOfSheets());
-
+            // find the first file that contains BUNO.
+            // If one exists, keep removing the sheet at that index until done
             int removeFrom = -1;
             for (int i = 1; i < wb.getNumberOfSheets(); i++) {
                 Sheet sheet = wb.getSheetAt(i);
                 if (sheet.getSheetName().contains("BUNO")) {
-                    System.out.println("Remove from: " + i);
                     removeFrom = i;
                     break;
                 }
             }
+            if (removeFrom != -1) while(wb.getNumberOfSheets() - 1 >= removeFrom) wb.removeSheetAt(removeFrom);
 
-            if (removeFrom != -1) {
-                while(wb.getNumberOfSheets() - 1 >= removeFrom) {
-                    System.out.println("Removing " + wb.getSheetName(removeFrom));
-                    wb.removeSheetAt(removeFrom);
-                }
-            }
-
+            // get the first sheet in the workbook
             Sheet sheet = wb.getSheetAt(0);
 
+            // find the first row of data
+            // look for the row where the value of cell[0] is "MU_DATE", data begins on the following row
             int firstRow = -1;
-            for (int i = sheet.getFirstRowNum(); i < 100; i++) {
+            for (int i = sheet.getFirstRowNum(); i < 50; i++) {
                 Row row = sheet.getRow(i);
                 if (row != null) {
                     Cell firstCell = row.getCell(0, Row.MissingCellPolicy.RETURN_NULL_AND_BLANK);
@@ -75,25 +63,30 @@ public class Main {
                 }
             }
 
+            // read the sheet to find and create an array of the BUNOs in the sheet
             Reader reader = new Reader(sheet, firstRow);
-            Map<String, Buno> bunosMap = reader.getBunos();
-            System.out.println("\nFound " + bunosMap.values().size() + " BUNOs");
+            List<Buno> bunos = reader.getBunos();
+            System.out.println("\nFound " + bunos.size() + " BUNOs");
 
-            List<Buno> bunos = new ArrayList<>(bunosMap.values());
+            // iterate over the list and write a new sheet for each BUNO
             for (Buno buno : bunos) {
-//                System.out.println(buno);
+                // get the data from each BUNO by reading the rows in which is occurs
                 RowReader bunoReader = new RowReader(sheet, buno.getRows());
 
+                // sort the list by date of the flight
                 List<CustomRowData> bunoData = bunoReader.getRecords().stream().sorted(Comparator.comparing(CustomRowData::getDate, Date::compareTo)).collect(Collectors.toList());
                 System.out.println("Found " + bunoData.size() + " unique records for Buno " + buno.getName());
 
+                // make the sheet
                 SheetWriter bunoWriter = new SheetWriter(wb, buno.getName(), bunoData);
                 bunoWriter.makeSheet();
             }
 
+            // evaluate all formulas
             FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
             evaluator.evaluateAll();
 
+            // write to the file
             try (OutputStream fileOut = new FileOutputStream(inputFileFolder + sourceName)) {
                 wb.write(fileOut);
             } catch (IOException e) {
@@ -105,10 +98,6 @@ public class Main {
             System.out.println("IOException while reading workbook " + e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    public void initialize() {
-
     }
 
 }

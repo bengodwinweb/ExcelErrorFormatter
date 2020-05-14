@@ -1,7 +1,9 @@
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Reader {
@@ -14,7 +16,7 @@ public class Reader {
     }
 
 
-    public Map<String, Buno> getBunos() {
+    public List<Buno> getBunos() {
         Map<String, Buno> bunos = new HashMap<>();
 
         for (Row row : sheet) {
@@ -31,6 +33,6 @@ public class Reader {
             }
         }
 
-        return bunos;
+        return new ArrayList<>(bunos.values());
     }
 }
