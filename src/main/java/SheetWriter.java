@@ -3,8 +3,6 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PropertyTemplate;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +13,13 @@ public class SheetWriter {
     public static final int DATE_COL = 0;
     public static final int FILE_COL = Main.FILE_COL;
     public static final int NUM_COLS = Main.BunoErrors.get(Main.BunoErrors.size() - 2).getEndCol() + 1;
-    public static IndexedColors headerColor = IndexedColors.PALE_BLUE;
+
+    public static final int NUM_MONTHS = 12;
+    public static final int FIRST_TABLE_COL = NUM_COLS + 2;
+    public static final int LAST_TABLE_COL = FIRST_TABLE_COL + 4;
+    public static final int FIRST_TABLE_ROW = 1;
+    public static final int LAST_TABLE_ROW = FIRST_TABLE_ROW + 2 + NUM_MONTHS + 1;
+//    public static IndexedColors headerColor = IndexedColors.PALE_BLUE;
 
     private Workbook wb;
     private Sheet sheet;
@@ -26,6 +30,8 @@ public class SheetWriter {
     private Row thirdRow;
     private Row footerRow;
 
+    private Font boldFont;
+
     public SheetWriter(Workbook wb, String bunoName, List<CustomRowData> rowData) {
         this.wb = wb;
         this.sheet = wb.createSheet("BUNO - " + bunoName);
@@ -35,46 +41,34 @@ public class SheetWriter {
         secondRow = sheet.createRow(1);
         thirdRow = sheet.createRow(2);
         footerRow = sheet.createRow(NUM_HEADER_ROWS + rowData.size());
+
+        boldFont = wb.createFont();
+        boldFont.setBold(true);
     }
 
     public void makeSheet() {
         makeHeaderAndFooter();
         makeDataRows();
-        makeBorders();
         makeSumTable();
         makeFormulas();
+        makeBorders();
     }
 
     private void makeHeaderAndFooter() {
-        // Font for the header and footer cells - set bold to true
-        Font headerFont = wb.createFont();
-        headerFont.setBold(true);
-
         // style for all header and footer cells that are not for a specific error - background is PALE_BLUE
-        CellStyle headerStyle = wb.createCellStyle();
-        headerStyle.setFillForegroundColor(headerColor.getIndex());
-        headerStyle.setFont(headerFont);
-        headerStyle.setAlignment(HorizontalAlignment.CENTER);
-        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        CellStyle plainHeaderStyle = createHeaderStyle(IndexedColors.PALE_BLUE);
 
         // set the style for header and footer cells related to each error - get background color from the error
-        for (BunoError e : Main.BunoErrors) {
-            CellStyle cellStyle = wb.createCellStyle();
-            cellStyle.setFont(headerFont);
-            cellStyle.setAlignment(HorizontalAlignment.CENTER);
-            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cellStyle.setFillForegroundColor(e.getColor().getIndex());
-            e.setCellStyle(cellStyle);
-        }
+        for (BunoError e : Main.BunoErrors) e.setCellStyle(createHeaderStyle(e.getColor()));
 
         // create all cells in the first row and set the style to header style (there are no error specific cells in the first row)
-        for (int i = 0; i < NUM_COLS; i++) firstRow.createCell(i).setCellStyle(headerStyle);
+        for (int i = 0; i < NUM_COLS; i++) firstRow.createCell(i).setCellStyle(plainHeaderStyle);
 
         // styling for second, third, and footer rows
         List<Row> styledRows = Arrays.asList(secondRow, thirdRow, footerRow);
         // set the first two cells to header style
         for (int i = 0; i <= FILE_COL; i++) {
-            for (Row row : styledRows) row.createCell(i).setCellStyle(headerStyle);
+            for (Row row : styledRows) row.createCell(i).setCellStyle(plainHeaderStyle);
         }
         // go through the errors and set the style for each col within the error's range to that error's style
         for (BunoError e : Main.BunoErrors) {
@@ -116,27 +110,6 @@ public class SheetWriter {
         sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), Main.BunoErrors.get(Main.BunoErrors.size() - 1).getStartCol(), Main.BunoErrors.get(Main.BunoErrors.size() - 1).getEndCol()));
     }
 
-    private void makeBorders() {
-        PropertyTemplate pt = new PropertyTemplate();
-
-        List<CellRangeAddress> cellRangeAddresses = new ArrayList<>();
-
-        // Draw thick border around outside and fill in light borders
-        CellRangeAddress header = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, NUM_COLS - 1); // all of header region
-        cellRangeAddresses.add(header);
-        cellRangeAddresses.addAll(createRange(DATE_COL, DATE_COL)); // around date header, footer, and body cols
-        cellRangeAddresses.addAll(createRange(FILE_COL, FILE_COL)); // around file header, footer, and body cols
-        for (BunoError e : Main.BunoErrors)
-            cellRangeAddresses.addAll(createRange(e)); // around the header, footer, and body cols for each error group
-
-        for (CellRangeAddress range : cellRangeAddresses) {
-            pt.drawBorders(range, BorderStyle.MEDIUM, BorderExtent.OUTSIDE);
-            pt.drawBorders(range, BorderStyle.THIN, BorderExtent.INSIDE);
-        }
-
-        pt.applyBorders(sheet);
-    }
-
     private void makeDataRows() {
         CellStyle dateStyle = wb.createCellStyle();
         dateStyle.setDataFormat(wb.getCreationHelper().createDataFormat().getFormat("m/d/yy"));
@@ -172,6 +145,7 @@ public class SheetWriter {
     }
 
     // set the data from current rowData object to the current row
+
     private void addRowContents(Row row, CustomRowData rowData) {
         row.createCell(DATE_COL).setCellValue(rowData.getDate()); // col 0 - date
         row.createCell(FILE_COL).setCellValue(rowData.getFileName()); // col 1 - file name
@@ -183,49 +157,85 @@ public class SheetWriter {
     }
 
     private void makeSumTable() {
-        int firstTableCol = Main.BunoErrors.get(Main.BunoErrors.size() - 2).getEndCol() + 2;
-        int lastTableCol = firstTableCol + 4;
-        int firstTableRow = secondRow.getRowNum();
-        int lastTableRow = firstTableRow + 2 + 12 + 1;
+        int firstBodyRow = FIRST_TABLE_ROW + 2;
 
-        for (int i = firstTableRow; i <= lastTableRow; i++) {
+        CellStyle turquoiseHeaderStyle = createHeaderStyle(IndexedColors.TURQUOISE);
+        CellStyle coralHeaderStyle = createHeaderStyle(IndexedColors.CORAL);
+
+        for (int i = FIRST_TABLE_ROW; i <= LAST_TABLE_ROW; i++) {
             Row row = sheet.getRow(i);
-            for (int j = firstTableCol; j <= lastTableCol; j++) {
+            for (int j = FIRST_TABLE_COL; j <= LAST_TABLE_COL; j++) {
                 Cell cell = row.createCell(j);
-                if (i == firstRow.getRowNum() || i == secondRow.getRowNum() || i == lastTableRow) {
-//                    cell.setCellStyle(headerStyle);
+                if (i == FIRST_TABLE_ROW || i == FIRST_TABLE_ROW + 1 || i == LAST_TABLE_ROW) {
+                    if (j <= FIRST_TABLE_COL + 1) cell.setCellStyle(turquoiseHeaderStyle);
+                    else cell.setCellStyle(coralHeaderStyle);
                 }
             }
         }
 
-        secondRow.getCell(firstTableCol).setCellValue(sheet.getSheetName());
-        secondRow.getCell(firstTableCol + 2).setCellValue(Main.BunoErrors.get(0).getCode());
+        secondRow.getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
+        secondRow.getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
+
+        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), FIRST_TABLE_COL, FIRST_TABLE_COL + 1));
+        sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), FIRST_TABLE_COL + 2, LAST_TABLE_COL));
 
         DateTime endMonth = new DateTime().minusMonths(1).dayOfMonth().withMinimumValue().withTimeAtStartOfDay();
-        DateTime startMonth = new DateTime(endMonth).minusMonths(12);
+        DateTime startMonth = new DateTime(endMonth).minusMonths(NUM_MONTHS);
 
-        DateTimeFormatter dtf = DateTimeFormat.forPattern("M/d/yy");
-        System.out.println("Start month = " + dtf.print(startMonth));
-        System.out.println("End month = " + dtf.print(endMonth));
+//        DateTimeFormatter dtf = DateTimeFormat.forPattern("M/d/yy");
+//        System.out.println("Start month = " + dtf.print(startMonth));
+//        System.out.println("End month = " + dtf.print(endMonth));
 
         CellStyle dateStyle = wb.createCellStyle();
         dateStyle.setDataFormat(wb.getCreationHelper().createDataFormat().getFormat("mmm-yy"));
 
-        for (int i = firstTableRow + 2; i < lastTableRow; i++) {
+        for (int i = 0; i <= NUM_MONTHS; i++) {
             DateTime month = new DateTime(startMonth).plusMonths(i);
-            Cell cell = sheet.getRow(i).getCell(firstTableCol);
+            Cell cell = sheet.getRow(i + firstBodyRow).getCell(FIRST_TABLE_COL);
             cell.setCellValue(month.toDate());
+            cell.setCellStyle(dateStyle);
         }
+    }
+
+    private void makeBorders() {
+        PropertyTemplate pt = new PropertyTemplate();
+
+        List<CellRangeAddress> cellRangeAddresses = new ArrayList<>();
+
+        // Draw thick border around outside and fill in light borders
+        CellRangeAddress header = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, NUM_COLS - 1); // all of header region
+        cellRangeAddresses.add(header);
+        cellRangeAddresses.addAll(createRange(DATE_COL, DATE_COL)); // around date header, footer, and body cols
+        cellRangeAddresses.addAll(createRange(FILE_COL, FILE_COL)); // around file header, footer, and body cols
+
+        // borders for header, footer, and body for each error group
+        for (BunoError e : Main.BunoErrors) cellRangeAddresses.addAll(createRange(e));
+
+        // Table borders
+        cellRangeAddresses.addAll(createTableRanges(FIRST_TABLE_ROW, LAST_TABLE_ROW, FIRST_TABLE_COL, LAST_TABLE_COL));
+
+        for (CellRangeAddress range : cellRangeAddresses) {
+            pt.drawBorders(range, BorderStyle.MEDIUM, BorderExtent.OUTSIDE);
+            pt.drawBorders(range, BorderStyle.THIN, BorderExtent.INSIDE);
+        }
+        pt.applyBorders(sheet);
     }
 
     private void makeFormulas() {
         // set the formulas for the footer row
         for (int i = FILE_COL + 1; i < NUM_COLS; i++) {
-//            char colChar = (char) ('A' + i); // get the char for the current column
             String colLetter = CellReference.convertNumToColString(i);
             String sumColFormula = "SUM(" + colLetter + (NUM_HEADER_ROWS + 1) + ":" + colLetter + (footerRow.getRowNum()) + ")"; // sum from first body row to last body row in the current column
             footerRow.getCell(i).setCellFormula(sumColFormula);
         }
+
+        // TODO - CREATE FORMULAS FOR FINDING TOTAL FLIGHTS PER MONTH
+
+
+        // TODO - CREATE FORMULAS FOR SUMMING ERRORS PER MONTH
+
+
+        // TODO - ADD SUM FORMULAS TO FOOTER
     }
 
     private List<CellRangeAddress> createRange(int startRow, int endRow, int startCol, int endCol) {
@@ -241,5 +251,24 @@ public class SheetWriter {
 
     private List<CellRangeAddress> createRange(BunoError e) {
         return createRange(secondRow.getRowNum(), thirdRow.getRowNum(), e.getStartCol(), e.getEndCol());
+    }
+
+    private List<CellRangeAddress> createTableRanges(int startRow, int endRow, int startCol, int endCol) {
+        CellRangeAddress header = new CellRangeAddress(startRow, startRow + 1, startCol, startCol + 1);
+        CellRangeAddress header2 = new CellRangeAddress(startRow, startRow + 1, startCol + 2, endCol);
+        CellRangeAddress body = new CellRangeAddress(startRow + 2, endRow - 1, startCol, startCol + 1);
+        CellRangeAddress body2 = new CellRangeAddress(startRow + 2, endRow - 1, startCol + 2, endCol);
+        CellRangeAddress footer = new CellRangeAddress(endRow, endRow, startCol, startCol + 1);
+        CellRangeAddress footer2 = new CellRangeAddress(endRow, endRow, startCol + 2, endCol);
+        return Arrays.asList(header, header2, body, body2, footer, footer2);
+    }
+
+    private CellStyle createHeaderStyle(IndexedColors color) {
+        CellStyle cellStyle = wb.createCellStyle();
+        cellStyle.setFont(boldFont);
+        cellStyle.setAlignment(HorizontalAlignment.CENTER);
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        cellStyle.setFillForegroundColor(color.getIndex());
+        return cellStyle;
     }
 }
