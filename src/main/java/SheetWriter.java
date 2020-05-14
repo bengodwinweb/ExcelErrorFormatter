@@ -2,6 +2,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PropertyTemplate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -95,78 +96,40 @@ public class SheetWriter {
         // set the values for the third row under the error code header - Pre-Flight then In-Flight then Post-Flight for each (except No_06A)
         for (int i = Main.BunoErrors.get(0).getStartCol(); i < NUM_COLS; i++) {
             if (i % 3 == (Main.BunoErrors.get(0).getStartCol() % 3)) thirdRow.getCell(i).setCellValue("Pre-Flight");
-            if (i % 3 == ((Main.BunoErrors.get(0).getStartCol() + 1) % 3)) thirdRow.getCell(i).setCellValue("In-Flight");
-            if (i % 3 == ((Main.BunoErrors.get(0).getStartCol() + 2) % 3)) thirdRow.getCell(i).setCellValue("Post-Flight");
+            if (i % 3 == ((Main.BunoErrors.get(0).getStartCol() + 1) % 3))
+                thirdRow.getCell(i).setCellValue("In-Flight");
+            if (i % 3 == ((Main.BunoErrors.get(0).getStartCol() + 2) % 3))
+                thirdRow.getCell(i).setCellValue("Post-Flight");
         }
 
+        // create merged regions in first and footer rows
         sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), NUM_HEADER_ROWS - 1, DATE_COL, DATE_COL));
         sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), NUM_HEADER_ROWS - 1, FILE_COL, FILE_COL));
         sheet.addMergedRegion(new CellRangeAddress(firstRow.getRowNum(), firstRow.getRowNum(), FILE_COL + 1, NUM_COLS - 1));
         sheet.addMergedRegion(new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), DATE_COL, FILE_COL));
 
+        // create merged regions in second row for each error over the span of its cols
         for (int i = 0; i < Main.BunoErrors.size() - 1; i++) {
             BunoError e = Main.BunoErrors.get(i);
             sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), e.getStartCol(), e.getEndCol()));
         }
-
+        // merged region for No_06A error in its col from second to third row
         sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), Main.BunoErrors.get(Main.BunoErrors.size() - 1).getStartCol(), Main.BunoErrors.get(Main.BunoErrors.size() - 1).getEndCol()));
     }
 
     private void makeBorders() {
         PropertyTemplate pt = new PropertyTemplate();
 
+        List<CellRangeAddress> cellRangeAddresses = new ArrayList<>();
+
         // Draw thick border around header and fill in light borders
         CellRangeAddress header = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, NUM_COLS - 1);
-        pt.drawBorders(header, BorderStyle.MEDIUM, BorderExtent.OUTSIDE);
-        pt.drawBorders(header, BorderStyle.THIN, BorderExtent.INSIDE);
+        cellRangeAddresses.add(header);
+        cellRangeAddresses.addAll(createRange(DATE_COL, DATE_COL));
+        cellRangeAddresses.addAll(createRange(FILE_COL, FILE_COL));
+        for (BunoError e : Main.BunoErrors) cellRangeAddresses.addAll(createRange(e));
 
-        CellRangeAddress dateTimeHeaderRange = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), DATE_COL, DATE_COL);
-        CellRangeAddress dateTimeFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), DATE_COL, DATE_COL);
-        CellRangeAddress dateTimeColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, DATE_COL, DATE_COL);
-
-        CellRangeAddress fileHeaderRange = new CellRangeAddress(firstRow.getRowNum(), thirdRow.getRowNum(), FILE_COL, FILE_COL);
-        CellRangeAddress fileFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), FILE_COL, FILE_COL);
-        CellRangeAddress fileColRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, FILE_COL, FILE_COL);
-
-        CellRangeAddress no06AHeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), NO_06A_COL, NO_06A_COL);
-        CellRangeAddress no06AFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), NO_06A_COL, NO_06A_COL);
-        CellRangeAddress no06AColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, NO_06A_COL, NO_06A_COL);
-
-        CellRangeAddress _06AHeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _06A_COL, _005_COL - 1);
-        CellRangeAddress _06AFooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _06A_COL, _005_COL - 1);
-        CellRangeAddress _06AColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _06A_COL, _005_COL - 1);
-
-        CellRangeAddress _005HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _005_COL, _031_COL - 1);
-        CellRangeAddress _005FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _005_COL, _031_COL - 1);
-        CellRangeAddress _005ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _005_COL, _031_COL - 1);
-
-        CellRangeAddress _031HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _031_COL, _065_COL - 1);
-        CellRangeAddress _031FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _031_COL, _065_COL - 1);
-        CellRangeAddress _031ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _031_COL, _065_COL - 1);
-
-        CellRangeAddress _065HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _065_COL, _066_COL - 1);
-        CellRangeAddress _065FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _065_COL, _066_COL - 1);
-        CellRangeAddress _065ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _065_COL, _066_COL - 1);
-
-        CellRangeAddress _066HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _066_COL, _067_COL - 1);
-        CellRangeAddress _066FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _066_COL, _067_COL - 1);
-        CellRangeAddress _066ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _066_COL, _067_COL - 1);
-
-        CellRangeAddress _067HeaderRange = new CellRangeAddress(secondRow.getRowNum(), thirdRow.getRowNum(), _067_COL, NUM_COLS - 1);
-        CellRangeAddress _067FooterRange = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), _067_COL, NUM_COLS - 1);
-        CellRangeAddress _067ColsRange = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, _067_COL, NUM_COLS - 1);
-
-        for (CellRangeAddress range : Arrays.asList(
-                dateTimeHeaderRange, dateTimeFooterRange, dateTimeColsRange,
-                fileHeaderRange, fileFooterRange, fileColRange,
-                no06AHeaderRange, no06AFooterRange, no06AColsRange,
-                _06AHeaderRange, _06AFooterRange, _06AColsRange,
-                _005HeaderRange, _005FooterRange, _005ColsRange,
-                _031HeaderRange, _031FooterRange, _031ColsRange,
-                _065HeaderRange, _065FooterRange, _065ColsRange,
-                _066HeaderRange, _066FooterRange, _066ColsRange,
-                _067HeaderRange, _067FooterRange, _067ColsRange
-        )) {
+        for (CellRangeAddress range : cellRangeAddresses) {
             pt.drawBorders(range, BorderStyle.MEDIUM, BorderExtent.OUTSIDE);
             pt.drawBorders(range, BorderStyle.THIN, BorderExtent.INSIDE);
         }
@@ -218,5 +181,20 @@ public class SheetWriter {
             if (events[i]) row.createCell(i + NO_06A_COL).setCellValue(1);
             else row.createCell(i + NO_06A_COL);
         }
+    }
+
+    private List<CellRangeAddress> createRange(int startRow, int endRow, int startCol, int endCol) {
+        CellRangeAddress header = new CellRangeAddress(startRow, endRow, startCol, endCol);
+        CellRangeAddress footer = new CellRangeAddress(footerRow.getRowNum(), footerRow.getRowNum(), startCol, endCol);
+        CellRangeAddress body = new CellRangeAddress(NUM_HEADER_ROWS, footerRow.getRowNum() - 1, startCol, endCol);
+        return Arrays.asList(header, footer, body);
+    }
+
+    private List<CellRangeAddress> createRange(int startCol, int endCol) {
+        return createRange(firstRow.getRowNum(), thirdRow.getRowNum(), startCol, endCol);
+    }
+
+    private List<CellRangeAddress> createRange(BunoError e) {
+        return createRange(secondRow.getRowNum(), thirdRow.getRowNum(), e.getStartCol(), e.getEndCol());
     }
 }

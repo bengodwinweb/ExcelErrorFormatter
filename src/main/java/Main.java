@@ -66,7 +66,7 @@ public class Main {
             // read the sheet to find and create an array of the BUNOs in the sheet
             Reader reader = new Reader(sheet, firstRow);
             List<Buno> bunos = reader.getBunos();
-            System.out.println("\nFound " + bunos.size() + " BUNOs");
+            System.out.println("\nFound " + bunos.size() + " BUNOs\n");
 
             // iterate over the list and write a new sheet for each BUNO
             for (Buno buno : bunos) {
@@ -75,7 +75,7 @@ public class Main {
 
                 // sort the list by date of the flight
                 List<CustomRowData> bunoData = bunoReader.getRecords().stream().sorted(Comparator.comparing(CustomRowData::getDate, Date::compareTo)).collect(Collectors.toList());
-                System.out.println("Found " + bunoData.size() + " unique records for Buno " + buno.getName());
+                System.out.println("Found " + bunoData.size() + " flights for BUNO " + buno.getName());
 
                 // make the sheet
                 SheetWriter bunoWriter = new SheetWriter(wb, buno.getName(), bunoData);
@@ -88,6 +88,7 @@ public class Main {
 
             // write to the file
             try (OutputStream fileOut = new FileOutputStream(inputFileFolder + sourceName)) {
+                System.out.println("\nWriting to disk...");
                 wb.write(fileOut);
             } catch (IOException e) {
                 System.out.println("IOException while writing workbook " + e.getMessage());
