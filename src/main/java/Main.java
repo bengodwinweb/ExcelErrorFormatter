@@ -1,4 +1,5 @@
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.util.*;
@@ -54,12 +55,25 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        String inputFileFolder = "/Users/bgodwin/Local Files/Development Projects/java/ExcelProjectInputFiles/";
-        String sourceName = "example2.xlsx";
+        String inputFileFolder, sourceName;
+        Scanner scan = new Scanner(System.in);
+
+//        inputFileFolder = "/Users/bgodwin/Local Files/Development Projects/java/ExcelProjectInputFiles/";
+//        sourceName = "example2.xlsx";
+
+        System.out.println("\nEnter the absolute path of the source folder (e.x. /Users/user/documents/): ");
+        inputFileFolder = scan.nextLine();
+        if (inputFileFolder.charAt(inputFileFolder.length() - 1) != '/') inputFileFolder += "/";
+
+        System.out.println("Enter the name of the source file (example.xsls): ");
+        sourceName = scan.nextLine();
+
 
         // read values from current workbook;
         try (InputStream inputStream = new FileInputStream(inputFileFolder + sourceName)) {
-            Workbook wb = WorkbookFactory.create(inputStream);
+            System.out.println("reading " + inputFileFolder + sourceName);
+
+            Workbook wb = WorkbookFactory.create(new FileInputStream(inputFileFolder + sourceName));
 
             // find the first file that contains BUNO.
             // If one exists, keep removing the sheet at that index until done
@@ -108,7 +122,11 @@ public class Main {
                 System.out.println("Found " + bunoData.size() + " flights for BUNO " + buno.getName());
 
                 // make the sheet
-                SheetWriter bunoWriter = new SheetWriter(wb, buno.getName(), bunoData);
+
+                Workbook workbook = new XSSFWorkbook();
+
+//                SheetWriter bunoWriter = new SheetWriter(wb, buno.getName(), bunoData);
+                SheetWriter bunoWriter = new SheetWriter(workbook, buno.getName(), bunoData);
                 bunoWriter.makeSheet();
             }
 
@@ -116,14 +134,14 @@ public class Main {
             FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
             evaluator.evaluateAll();
 
-            // write to the file
-            try (OutputStream fileOut = new FileOutputStream(inputFileFolder + sourceName)) {
-                System.out.println("\nWriting to disk...");
-                wb.write(fileOut);
-            } catch (IOException e) {
-                System.out.println("IOException while writing workbook " + e.getMessage());
-                e.printStackTrace();
-            }
+//            // write to the file
+//            try (OutputStream fileOut = new FileOutputStream(inputFileFolder + sourceName)) {
+//                System.out.println("\nWriting to disk...");
+//                wb.write(fileOut);
+//            } catch (IOException e) {
+//                System.out.println("IOException while writing workbook " + e.getMessage());
+//                e.printStackTrace();
+//            }
 
         } catch (IOException e) {
             System.out.println("IOException while reading workbook " + e.getMessage());

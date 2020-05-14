@@ -2,11 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ed95ef18-99c4-47d3-bfb9-cb9ced0f0a18" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/bgodwin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/bgodwin.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/BunoError.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BunoError.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/SheetWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/SheetWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/BunoError.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/BunoError.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Main.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/SheetWriter.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/SheetWriter.class" afterDir="false" />
     </list>
@@ -103,7 +102,8 @@
       <updated>1589328222153</updated>
       <workItem from="1589328226601" duration="18320000" />
       <workItem from="1589375031967" duration="49927000" />
-      <workItem from="1589434012530" duration="9773000" />
+      <workItem from="1589434012530" duration="20287000" />
+      <workItem from="1589488028742" duration="1031000" />
     </task>
     <servers />
   </component>
@@ -127,22 +127,22 @@
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="417" y="23" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1589395341003" />
-    <state width="1351" height="213" key="GridCell.Tab.0.bottom" timestamp="1589468981915">
+    <state width="1142" height="213" key="GridCell.Tab.0.bottom" timestamp="1589488680244">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="213" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1589468981915" />
-    <state width="1351" height="213" key="GridCell.Tab.0.center" timestamp="1589468981914">
+    <state width="1142" height="213" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1589488680244" />
+    <state width="1142" height="213" key="GridCell.Tab.0.center" timestamp="1589488680243">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="213" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1589468981914" />
-    <state width="1351" height="213" key="GridCell.Tab.0.left" timestamp="1589468981913">
+    <state width="1142" height="213" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1589488680243" />
+    <state width="1142" height="213" key="GridCell.Tab.0.left" timestamp="1589488680242">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="213" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1589468981913" />
-    <state width="1351" height="213" key="GridCell.Tab.0.right" timestamp="1589468981915">
+    <state width="1142" height="213" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1589488680242" />
+    <state width="1142" height="213" key="GridCell.Tab.0.right" timestamp="1589488680244">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state width="1351" height="213" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1589468981915" />
+    <state width="1142" height="213" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1589488680244" />
     <state x="394" y="181" width="1216" height="753" key="SettingsEditor" timestamp="1589330857360">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>

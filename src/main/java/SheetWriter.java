@@ -3,6 +3,8 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PropertyTemplate;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,12 +20,14 @@ public class SheetWriter {
     public static final int FIRST_TABLE_COL = NUM_COLS + 2;
     public static final int LAST_TABLE_COL = FIRST_TABLE_COL + 4;
     public static final int FIRST_TABLE_ROW = 1;
+    public static final int FIRST_BODY_ROW = FIRST_TABLE_ROW + 2;
     public static final int LAST_TABLE_ROW = FIRST_TABLE_ROW + 2 + NUM_MONTHS + 1;
 //    public static IndexedColors headerColor = IndexedColors.PALE_BLUE;
 
     private Workbook wb;
     private Sheet sheet;
     private List<CustomRowData> rowData;
+//    private List<BunoError> localBunoErrors;
 
     private Row firstRow;
     private Row secondRow;
@@ -34,7 +38,7 @@ public class SheetWriter {
 
     public SheetWriter(Workbook wb, String bunoName, List<CustomRowData> rowData) {
         this.wb = wb;
-        this.sheet = wb.createSheet("BUNO - " + bunoName);
+//        this.sheet = wb.createSheet("BUNO - " + bunoName);
         this.rowData = rowData;
 
         firstRow = sheet.createRow(0);
@@ -44,6 +48,9 @@ public class SheetWriter {
 
         boldFont = wb.createFont();
         boldFont.setBold(true);
+
+//        localBunoErrors = new ArrayList<>(Main.BunoErrors);
+//        for ()
     }
 
     public void makeSheet() {
@@ -52,7 +59,7 @@ public class SheetWriter {
         makeSumTable();
         makeFormulas();
         makeBorders();
-        deleteColumns();
+//        deleteColumns();
     }
 
     private void makeHeaderAndFooter() {
@@ -158,8 +165,6 @@ public class SheetWriter {
     }
 
     private void makeSumTable() {
-        int firstBodyRow = FIRST_TABLE_ROW + 2;
-
         CellStyle turquoiseHeaderStyle = createHeaderStyle(IndexedColors.LIGHT_TURQUOISE);
         CellStyle coralHeaderStyle = createHeaderStyle(Main.BunoErrors.get(0).getColor());
 
@@ -175,8 +180,6 @@ public class SheetWriter {
         }
 
         // Set text for static cells
-//        secondRow.getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
-//        secondRow.getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
         sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
         sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
         sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL).setCellValue("Month");
@@ -202,7 +205,7 @@ public class SheetWriter {
         // populate first column in body with month formatted "Jan-19"
         for (int i = 0; i <= NUM_MONTHS; i++) {
             DateTime month = new DateTime(startMonth).plusMonths(i);
-            Cell cell = sheet.getRow(i + firstBodyRow).getCell(FIRST_TABLE_COL);
+            Cell cell = sheet.getRow(i + FIRST_BODY_ROW).getCell(FIRST_TABLE_COL);
             cell.setCellValue(month.toDate());
             cell.setCellStyle(dateStyle);
         }
@@ -233,20 +236,51 @@ public class SheetWriter {
     }
 
     private void makeFormulas() {
-        // set the formulas for the footer row
+        // set the formulas for the footer row of main data
         for (int i = FILE_COL + 1; i < NUM_COLS; i++) {
             String colLetter = CellReference.convertNumToColString(i);
             String sumColFormula = "SUM(" + colLetter + (NUM_HEADER_ROWS + 1) + ":" + colLetter + (footerRow.getRowNum()) + ")"; // sum from first body row to last body row in the current column
             footerRow.getCell(i).setCellFormula(sumColFormula);
         }
 
-        // TODO - CREATE FORMULAS FOR FINDING TOTAL FLIGHTS PER MONTH
+        // SUMMATION TABLE
+        BunoError bunoError = Main.BunoErrors.get(0);
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("YYYY,M,d"); // date format for excel formula strings
 
+        int sourceStartRow = NUM_HEADER_ROWS + 1;
+        int sourceEndRow = footerRow.getRowNum();
+        String sourceDateColString = CellReference.convertNumToColString(DATE_COL);
+        String sourceDateRange = sourceDateColString + sourceStartRow + ":" + sourceDateColString + sourceEndRow;
 
-        // TODO - CREATE FORMULAS FOR SUMMING ERRORS PER MONTH
+        // iterate down body of table and add formulas in each row
+        for (int rowNum = FIRST_BODY_ROW; rowNum < LAST_TABLE_ROW; rowNum++) {
+            DateTime month = new DateTime(sheet.getRow(rowNum).getCell(FIRST_TABLE_COL).getDateCellValue()).withTimeAtStartOfDay();
+            String startDate = dtf.print(month);
+            String endDate = dtf.print(month.plusMonths(1).minusMinutes(1));
 
+            // COUNTIFS formula for total flights in a month
+            String countFormula = "COUNTIFS(" + sourceDateRange + ", \">=\" & DATE(" + startDate + "), " + sourceDateRange + ", \"<=\" & DATE(" + endDate + "))";
+            sheet.getRow(rowNum).getCell(FIRST_TABLE_COL + 1).setCellFormula(countFormula);
 
-        // TODO - ADD SUM FORMULAS TO FOOTER
+            // SUMIFS formula for
+            for (int j = 0; j < 3; j++) {
+                int currentCellNum = j + FIRST_TABLE_COL + 2;
+                int sourceErrorCol = bunoError.getStartCol() + j;
+
+                String sourceErrorColString = CellReference.convertNumToColString(sourceErrorCol);
+                String sourceErrorRange = sourceErrorColString + sourceStartRow + ":" + sourceErrorColString + sourceEndRow;
+                String sumFormula = "SUMIFS(" + sourceErrorRange + ", " + sourceDateRange + ", \">=\" & DATE(" + startDate + "), " + sourceDateRange + ", \"<=\" & DATE(" + endDate + "))";
+
+                sheet.getRow(rowNum).getCell(currentCellNum).setCellFormula(sumFormula);
+            }
+        }
+
+        // SUM formulas for footer of table
+        for (int i = FIRST_TABLE_COL + 1; i <= LAST_TABLE_COL; i++) {
+            String colLetter = CellReference.convertNumToColString(i);
+            String sumColFormula = "SUM(" + colLetter + (FIRST_BODY_ROW + 1) + ":" + colLetter + (LAST_TABLE_ROW) + ")"; // sum from first body row to last body row in the current column
+            sheet.getRow(LAST_TABLE_ROW).getCell(i).setCellFormula(sumColFormula);
+        }
     }
 
     private List<CellRangeAddress> createRange(int startRow, int endRow, int startCol, int endCol) {
@@ -293,18 +327,16 @@ public class SheetWriter {
             BunoError e = Main.BunoErrors.get(i);
 
             int preFlightTotal = (int) footerRow.getCell(e.getStartCol()).getNumericCellValue();
-            int inFlightTotal =  (int) footerRow.getCell(e.getStartCol() + 1).getNumericCellValue();
+            int inFlightTotal = (int) footerRow.getCell(e.getStartCol() + 1).getNumericCellValue();
             int postFlightTotal = (int) footerRow.getCell(e.getStartCol() + 2).getNumericCellValue();
 
 //            System.out.println(sheet.getSheetName() + ", error: " + e.getCode() + " pre: " + preFlightTotal + " in: " + inFlightTotal + " post: " + postFlightTotal);
-            if (preFlightTotal == 0 && preFlightTotal == inFlightTotal && preFlightTotal == postFlightTotal) {
-                System.out.println("Delete error " + e.getCode());
+            if (preFlightTotal == 0 && preFlightTotal == inFlightTotal && preFlightTotal == postFlightTotal)
                 errorsToDelete.add(e);
-            }
         }
 
-        for (BunoError e : errorsToDelete) {
-            System.out.println("Delete error " + e.getCode());
+        for (int i = errorsToDelete.size() - 1; i >= 0; i--) {
+            System.out.println("Delete error " + errorsToDelete.get(i).getCode());
         }
     }
 }
