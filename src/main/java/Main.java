@@ -14,11 +14,19 @@ public class Main {
         BunoError error06A = new BunoError("06A", errorNo06A.getEndCol() + 1, errorNo06A.getEndCol() + 3, IndexedColors.CORAL);
         BunoError error005 = new BunoError("005", error06A.getEndCol() + 1, error06A.getEndCol() + 3, IndexedColors.LIGHT_GREEN);
         BunoError error031 = new BunoError("031", error005.getEndCol() + 1, error005.getEndCol() + 3, IndexedColors.LIGHT_CORNFLOWER_BLUE);
+//        BunoError error064 = new BunoError("064", error031.getEndCol() + 1, error031.getEndCol() + 3, IndexedColors.PLUM);
+//        BunoError error065 = new BunoError("065", error064.getEndCol() + 1, error064.getEndCol() + 3, IndexedColors.LIGHT_YELLOW);
         BunoError error065 = new BunoError("065", error031.getEndCol() + 1, error031.getEndCol() + 3, IndexedColors.LIGHT_YELLOW);
         BunoError error066 = new BunoError("066", error065.getEndCol() + 1, error065.getEndCol() + 3, IndexedColors.LIGHT_ORANGE);
         BunoError error067 = new BunoError("067", error066.getEndCol() + 1, error066.getEndCol() + 3, IndexedColors.LIGHT_TURQUOISE);
+//        BunoError error02A = new BunoError("02A", error067.getEndCol() + 1, error067.getEndCol() + 3, IndexedColors.LIGHT_GREEN);
+//        BunoError error02C = new BunoError("02C", error02A.getEndCol() + 1, error02A.getEndCol() + 3, IndexedColors.LIGHT_CORNFLOWER_BLUE);
+//        BunoError error2A1 = new BunoError("2A1", error02C.getEndCol() + 1, error02C.getEndCol() + 3, IndexedColors.LIGHT_YELLOW);
+//        BunoError error2A2 = new BunoError("2A2", error2A1.getEndCol() + 1, error2A1.getEndCol() + 3, IndexedColors.LIGHT_ORANGE);
+//        BunoError error2A3 = new BunoError("2A3", error2A2.getEndCol() + 1, error2A2.getEndCol() + 3, IndexedColors.LIGHT_TURQUOISE);
 
 
+//        BunoErrors = new ArrayList<>(Arrays.asList(error06A, error005, error031, error064, error065, error066, error067, error02A, error02C, error2A1, error2A2, error2A3));
         BunoErrors = new ArrayList<>(Arrays.asList(error06A, error005, error031, error065, error066, error067));
         BunoErrors.add(errorNo06A);
     }

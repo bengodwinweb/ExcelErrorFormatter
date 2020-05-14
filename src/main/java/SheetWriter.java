@@ -1,6 +1,10 @@
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PropertyTemplate;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +41,8 @@ public class SheetWriter {
         makeHeaderAndFooter();
         makeDataRows();
         makeBorders();
+        makeSumTable();
+        makeFormulas();
     }
 
     private void makeHeaderAndFooter() {
@@ -120,7 +126,8 @@ public class SheetWriter {
         cellRangeAddresses.add(header);
         cellRangeAddresses.addAll(createRange(DATE_COL, DATE_COL)); // around date header, footer, and body cols
         cellRangeAddresses.addAll(createRange(FILE_COL, FILE_COL)); // around file header, footer, and body cols
-        for (BunoError e : Main.BunoErrors) cellRangeAddresses.addAll(createRange(e)); // around the header, footer, and body cols for each error group
+        for (BunoError e : Main.BunoErrors)
+            cellRangeAddresses.addAll(createRange(e)); // around the header, footer, and body cols for each error group
 
         for (CellRangeAddress range : cellRangeAddresses) {
             pt.drawBorders(range, BorderStyle.MEDIUM, BorderExtent.OUTSIDE);
@@ -162,13 +169,6 @@ public class SheetWriter {
 
         sheet.autoSizeColumn(DATE_COL);
         sheet.autoSizeColumn(FILE_COL);
-
-        // set the formulas for the footer row
-        for (int i = FILE_COL + 1; i < NUM_COLS; i++) {
-            char colChar = (char) ('A' + i); // get the char for the current column
-            String sumColFormula = "SUM(" + colChar + (NUM_HEADER_ROWS + 1) + ":" + colChar + (footerRow.getRowNum()) + ")"; // sum from first body row to last body row in the current column
-            footerRow.getCell(i).setCellFormula(sumColFormula);
-        }
     }
 
     // set the data from current rowData object to the current row
@@ -179,6 +179,52 @@ public class SheetWriter {
         for (int i = 0; i < events.length; i++) {
             if (events[i]) row.createCell(i + FILE_COL + 1).setCellValue(1);
             else row.createCell(i + FILE_COL + 1);
+        }
+    }
+
+    private void makeSumTable() {
+        int firstTableCol = Main.BunoErrors.get(Main.BunoErrors.size() - 2).getEndCol() + 2;
+        int lastTableCol = firstTableCol + 4;
+        int firstTableRow = secondRow.getRowNum();
+        int lastTableRow = firstTableRow + 2 + 12 + 1;
+
+        for (int i = firstTableRow; i <= lastTableRow; i++) {
+            Row row = sheet.getRow(i);
+            for (int j = firstTableCol; j <= lastTableCol; j++) {
+                Cell cell = row.createCell(j);
+                if (i == firstRow.getRowNum() || i == secondRow.getRowNum() || i == lastTableRow) {
+//                    cell.setCellStyle(headerStyle);
+                }
+            }
+        }
+
+        secondRow.getCell(firstTableCol).setCellValue(sheet.getSheetName());
+        secondRow.getCell(firstTableCol + 2).setCellValue(Main.BunoErrors.get(0).getCode());
+
+        DateTime endMonth = new DateTime().minusMonths(1).dayOfMonth().withMinimumValue().withTimeAtStartOfDay();
+        DateTime startMonth = new DateTime(endMonth).minusMonths(12);
+
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("M/d/yy");
+        System.out.println("Start month = " + dtf.print(startMonth));
+        System.out.println("End month = " + dtf.print(endMonth));
+
+        CellStyle dateStyle = wb.createCellStyle();
+        dateStyle.setDataFormat(wb.getCreationHelper().createDataFormat().getFormat("mmm-yy"));
+
+        for (int i = firstTableRow + 2; i < lastTableRow; i++) {
+            DateTime month = new DateTime(startMonth).plusMonths(i);
+            Cell cell = sheet.getRow(i).getCell(firstTableCol);
+            cell.setCellValue(month.toDate());
+        }
+    }
+
+    private void makeFormulas() {
+        // set the formulas for the footer row
+        for (int i = FILE_COL + 1; i < NUM_COLS; i++) {
+//            char colChar = (char) ('A' + i); // get the char for the current column
+            String colLetter = CellReference.convertNumToColString(i);
+            String sumColFormula = "SUM(" + colLetter + (NUM_HEADER_ROWS + 1) + ":" + colLetter + (footerRow.getRowNum()) + ")"; // sum from first body row to last body row in the current column
+            footerRow.getCell(i).setCellFormula(sumColFormula);
         }
     }
 
