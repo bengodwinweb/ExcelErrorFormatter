@@ -58,13 +58,8 @@ public class SheetWriter {
         boldFont.setBold(true);
 
         localBunoErrors = new ArrayList<>(Main.BunoErrors);
-        System.out.println("Alias = " + (localBunoErrors == Main.BunoErrors));
-
         List<String> errorsInBuno = new ArrayList<>(Collections.singletonList(RowReader.EVENT_CODES.get(0)));
 
-        // TODO - iterate over list of
-//        for (errors in rowData.getErrors()) add error.code() to errorsInBuno
-        System.out.println("Iterating over list of codes");
         for (CustomRowData rowData : rowDataList) {
             for (ErrorEvent errorEvent : rowData.getEvents()) {
                 if (RowReader.EVENT_CODES.contains(errorEvent.getCode()) && !errorsInBuno.contains(errorEvent.getCode())) {
@@ -72,12 +67,6 @@ public class SheetWriter {
                 }
             }
         }
-
-//        System.out.print("Errors for BUNO " + bunoName + ":\t");
-//        for (String err : errorsInBuno) {
-//            System.out.print(err + "\t");
-//        }
-//        System.out.println();
 
         // for BunoError in localBunoErrors if !errors.contains(bunoError) remove from localBunoErrors
         localBunoErrors.removeIf(bunoError -> !errorsInBuno.contains(bunoError.getCode()));
@@ -92,27 +81,15 @@ public class SheetWriter {
         }
 
         BunoError noError = Main.BunoErrors.get(Main.BunoErrors.size() - 1);
-//        noError.setStartCol(firstErrCol - 1);
-//        noError.setEndCol(noError.getStartCol());
         localBunoErrors.add(noError);
 
         localBunoErrorCodes = new ArrayList<>();
-        System.out.print("Errors for BUNO " + bunoName + ":\t");
         for (BunoError e : localBunoErrors) {
-            System.out.print(e.getCode() + " " + e.getStartCol() + " - " + e.getEndCol() + "\t");
             localBunoErrorCodes.add(e.getCode());
         }
-        System.out.println();
-
-        System.out.print("Errors in MAIN:\t");
-        for (BunoError e : Main.BunoErrors) {
-            System.out.print(e.getCode() + " " + e.getStartCol() + " - " + e.getEndCol() + "\t");
-        }
-        System.out.println();
 
         // initialize "constants" that are dependant upon the size of the errors list
         NUM_COLS = localBunoErrors.get(localBunoErrors.size() - 2).getEndCol() + 1;
-        System.out.println("NUM_COLS = " + NUM_COLS);
         FIRST_TABLE_COL = NUM_COLS + 2;
         LAST_TABLE_COL = FIRST_TABLE_COL + 4;
         FIRST_TABLE_ROW = 1;
@@ -126,7 +103,6 @@ public class SheetWriter {
         makeSumTable();
         makeFormulas();
         makeBorders();
-//        deleteColumns();
 
         FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
         evaluator.evaluateAll();
@@ -135,7 +111,7 @@ public class SheetWriter {
             System.out.println("Writing " + bunoName + " to disk...");
             wb.write(fileOut);
         } catch (IOException e) {
-            System.out.println("Exception trying workbook for BUNO " + bunoName);
+            System.out.println("Exception writing workbook for BUNO " + bunoName);
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
@@ -159,7 +135,6 @@ public class SheetWriter {
         }
         // go through the errors and set the style for each col within the error's range to that error's style
         for (BunoError e : localBunoErrors) {
-//            System.out.println("Initializing header columns " + e.getStartCol() + " - " + e.getEndCol());
             for (int i = e.getStartCol(); i <= e.getEndCol(); i++) {
                 for (Row row : styledRows) row.createCell(i).setCellStyle(e.getCellStyle());
             }
@@ -176,7 +151,6 @@ public class SheetWriter {
 
         // set the values for the third row under the error code header - Pre-Flight then In-Flight then Post-Flight for each (except No_06A)
         for (int i = localBunoErrors.get(0).getStartCol(); i < NUM_COLS; i++) {
-//            System.out.println("i = " + i);
             if (i % 3 == (localBunoErrors.get(0).getStartCol() % 3)) {
                 thirdRow.getCell(i).setCellValue("Pre-Flight");
             }
@@ -227,7 +201,6 @@ public class SheetWriter {
             // starting with dark, alternate dark and light every three cols
             int count = 0;
             for (int j = FILE_COL + 2; j < NUM_COLS; j++) {
-//                System.out.println("j = " + j);
                 if ((count / 3) % 2 == 0) row.getCell(j).setCellStyle(darkCountCellStyle);
                 else row.getCell(j).setCellStyle(lightCountCellStyle);
                 count++;
@@ -239,13 +212,10 @@ public class SheetWriter {
     }
 
     // set the data from current rowData object to the current row
-
     private void addRowContents(Row row, CustomRowData rowData) {
         row.createCell(DATE_COL).setCellValue(rowData.getDate()); // col 0 - date
         row.createCell(FILE_COL).setCellValue(rowData.getFileName()); // col 1 - file name
-//        boolean[] events = rowData.getEventArray(); // for every other col - put a 1 if events[col] == true, blank if false
         boolean[] events = makeEventArray(rowData);
-//        System.out.println("events.length = " + events.length);
         for (int i = 0; i < events.length; i++) {
             if (events[i]) row.createCell(i + FILE_COL + 1).setCellValue(1);
             else row.createCell(i + FILE_COL + 1);
@@ -277,11 +247,9 @@ public class SheetWriter {
         sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL + 4).setCellValue("Post-Flight");
         sheet.getRow(LAST_TABLE_ROW).getCell(FIRST_TABLE_COL).setCellValue("Total:");
 
-
         // Merge cells in first header row
         sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), FIRST_TABLE_COL, FIRST_TABLE_COL + 1));
         sheet.addMergedRegion(new CellRangeAddress(secondRow.getRowNum(), secondRow.getRowNum(), FIRST_TABLE_COL + 2, LAST_TABLE_COL));
-
 
         // Get start and end month
         DateTime endMonth = new DateTime().minusMonths(1).dayOfMonth().withMinimumValue().withTimeAtStartOfDay();
@@ -404,31 +372,6 @@ public class SheetWriter {
         cellStyle.setFillForegroundColor(color.getIndex());
         return cellStyle;
     }
-
-//    private List<Integer> makeErrorArrayValues(CustomRowData rowData) {
-//        ArrayList<ErrorEvent> rowErrorEvents = rowData.getEvents();
-//        List<Integer> eventArray = new ArrayList<>();
-//        for (int i = 0; i < (localBunoErrors.size() - 1) * 3 + 1; i++) eventArray.add(0);
-//
-//        for (ErrorEvent e : rowErrorEvents) {
-//            int i = 1 + (RowReader.EVENT_CODES.indexOf(e.getCode()) * 3);
-//
-//            switch (e.getMode()) {
-//                case IN_FLIGHT:
-//                    i++;
-//                    break;
-//                case POST_FLIGHT:
-//                    i += 2;
-//                    break;
-//                default:
-//                    break;
-//            }
-//
-//            if (i >= 1 && i < eventArray.size()) eventArray.set(i, eventArray.get(i) + 1);
-//        }
-//        if (eventArray.get(1) + eventArray.get(2) + eventArray.get(3) == 0) eventArray.set(0, 1);
-//        return eventArray;
-//    }
 
     private boolean[] makeEventArray(CustomRowData rowData) {
         boolean[] eventArray = new boolean[(localBunoErrors.size() - 1) * 3 + 1];
