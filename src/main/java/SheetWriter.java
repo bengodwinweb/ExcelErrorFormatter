@@ -6,6 +6,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,12 +25,12 @@ public class SheetWriter {
     public static final int FIRST_TABLE_ROW = 1;
     public static final int FIRST_BODY_ROW = FIRST_TABLE_ROW + 2;
     public static final int LAST_TABLE_ROW = FIRST_TABLE_ROW + 2 + NUM_MONTHS + 1;
-//    public static IndexedColors headerColor = IndexedColors.PALE_BLUE;
 
     private Workbook wb;
     private Sheet sheet;
+    private String bunoName;
     private List<CustomRowData> rowData;
-//    private List<BunoError> localBunoErrors;
+    private List<BunoError> localBunoErrors;
 
     private Row firstRow;
     private Row secondRow;
@@ -39,6 +42,9 @@ public class SheetWriter {
     public SheetWriter(Workbook wb, String bunoName, List<CustomRowData> rowData) {
         this.wb = wb;
 //        this.sheet = wb.createSheet("BUNO - " + bunoName);
+        this.bunoName = bunoName;
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("M-d-yy");
+        this.sheet = wb.createSheet(dtf.print(new DateTime()));
         this.rowData = rowData;
 
         firstRow = sheet.createRow(0);
@@ -49,7 +55,9 @@ public class SheetWriter {
         boldFont = wb.createFont();
         boldFont.setBold(true);
 
-//        localBunoErrors = new ArrayList<>(Main.BunoErrors);
+        localBunoErrors = new ArrayList<>(Main.BunoErrors);
+
+        List<String> errorsInBuno = new ArrayList<>();
 //        for ()
     }
 
@@ -60,6 +68,18 @@ public class SheetWriter {
         makeFormulas();
         makeBorders();
 //        deleteColumns();
+
+        FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+        evaluator.evaluateAll();
+
+        try (OutputStream fileOut = new FileOutputStream(Main.DIRECTORY_NAME + bunoName + ".xlsx")) {
+            System.out.println("Writing " + bunoName + " to disk...");
+            wb.write(fileOut);
+        } catch (IOException e) {
+            System.out.println("Exception trying workbook for BUNO " + bunoName);
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void makeHeaderAndFooter() {
@@ -180,7 +200,7 @@ public class SheetWriter {
         }
 
         // Set text for static cells
-        sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL).setCellValue(sheet.getSheetName());
+        sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL).setCellValue("BUNO " + bunoName);
         sheet.getRow(FIRST_TABLE_ROW).getCell(FIRST_TABLE_COL + 2).setCellValue(Main.BunoErrors.get(0).getCode());
         sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL).setCellValue("Month");
         sheet.getRow(FIRST_TABLE_ROW + 1).getCell(FIRST_TABLE_COL + 1).setCellValue("Flights");
@@ -330,7 +350,7 @@ public class SheetWriter {
             int inFlightTotal = (int) footerRow.getCell(e.getStartCol() + 1).getNumericCellValue();
             int postFlightTotal = (int) footerRow.getCell(e.getStartCol() + 2).getNumericCellValue();
 
-//            System.out.println(sheet.getSheetName() + ", error: " + e.getCode() + " pre: " + preFlightTotal + " in: " + inFlightTotal + " post: " + postFlightTotal);
+//            System.out.println(bunoName + ", error: " + e.getCode() + " pre: " + preFlightTotal + " in: " + inFlightTotal + " post: " + postFlightTotal);
             if (preFlightTotal == 0 && preFlightTotal == inFlightTotal && preFlightTotal == postFlightTotal)
                 errorsToDelete.add(e);
         }

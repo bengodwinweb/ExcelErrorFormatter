@@ -9,6 +9,7 @@ public class Main {
 
     public static final int FILE_COL = 1;
     public static List<BunoError> BunoErrors;
+    public static String DIRECTORY_NAME;
 
     static {
         int noErrCol = FILE_COL + 1;
@@ -55,25 +56,25 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        String inputFileFolder, sourceName;
+        String sourceName;
         Scanner scan = new Scanner(System.in);
 
-//        inputFileFolder = "/Users/bgodwin/Local Files/Development Projects/java/ExcelProjectInputFiles/";
+//        DIRECTORY_NAME = "/Users/bgodwin/Local Files/Development Projects/java/ExcelProjectInputFiles/";
 //        sourceName = "example2.xlsx";
 
         System.out.println("\nEnter the absolute path of the source folder (e.x. /Users/user/documents/): ");
-        inputFileFolder = scan.nextLine();
-        if (inputFileFolder.charAt(inputFileFolder.length() - 1) != '/') inputFileFolder += "/";
+        DIRECTORY_NAME = scan.nextLine();
+        if (DIRECTORY_NAME.charAt(DIRECTORY_NAME.length() - 1) != '/') DIRECTORY_NAME += "/";
 
         System.out.println("Enter the name of the source file (example.xsls): ");
         sourceName = scan.nextLine();
 
 
         // read values from current workbook;
-        try (InputStream inputStream = new FileInputStream(inputFileFolder + sourceName)) {
-            System.out.println("reading " + inputFileFolder + sourceName);
+        try (InputStream inputStream = new FileInputStream(DIRECTORY_NAME + sourceName)) {
+            System.out.println("reading " + DIRECTORY_NAME + sourceName);
 
-            Workbook wb = WorkbookFactory.create(new FileInputStream(inputFileFolder + sourceName));
+            Workbook wb = WorkbookFactory.create(new FileInputStream(DIRECTORY_NAME + sourceName));
 
             // find the first file that contains BUNO.
             // If one exists, keep removing the sheet at that index until done
@@ -110,7 +111,7 @@ public class Main {
             // read the sheet to find and create an array of the BUNOs in the sheet
             Reader reader = new Reader(sheet, firstRow);
             List<Buno> bunos = reader.getBunos();
-            System.out.println("\nFound " + bunos.size() + " BUNOs\n");
+            System.out.println("\nFound " + bunos.size() + " BUNOs");
 
             // iterate over the list and write a new sheet for each BUNO
             for (Buno buno : bunos) {
@@ -119,7 +120,7 @@ public class Main {
 
                 // sort the list by date of the flight
                 List<CustomRowData> bunoData = bunoReader.getRecords().stream().sorted(Comparator.comparing(CustomRowData::getDate, Date::compareTo)).collect(Collectors.toList());
-                System.out.println("Found " + bunoData.size() + " flights for BUNO " + buno.getName());
+                System.out.println("\nFound " + bunoData.size() + " flights for BUNO " + buno.getName());
 
                 // make the sheet
 
@@ -131,11 +132,11 @@ public class Main {
             }
 
             // evaluate all formulas
-            FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
-            evaluator.evaluateAll();
+//            FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+//            evaluator.evaluateAll();
 
 //            // write to the file
-//            try (OutputStream fileOut = new FileOutputStream(inputFileFolder + sourceName)) {
+//            try (OutputStream fileOut = new FileOutputStream(DIRECTORY_NAME + sourceName)) {
 //                System.out.println("\nWriting to disk...");
 //                wb.write(fileOut);
 //            } catch (IOException e) {

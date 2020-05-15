@@ -14,11 +14,9 @@ public class CustomRowData {
     private String fileName;
     private Date date;
     private ArrayList<ErrorEvent> events;
-//    private boolean[] eventArray;
 
     public CustomRowData() {
         this.events = new ArrayList<>();
-//        this.eventArray = new boolean[19];
     }
 
     public CustomRowData(String fileName, Date date) {
