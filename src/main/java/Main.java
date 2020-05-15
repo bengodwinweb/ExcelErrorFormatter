@@ -1,7 +1,9 @@
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,21 +65,9 @@ public class Main {
 
         // read values from current workbook;
         try (InputStream inputStream = new FileInputStream(DIRECTORY_NAME + sourceName)) {
-            System.out.println("reading " + DIRECTORY_NAME + sourceName);
+            System.out.println("\nProcessing " + sourceName);
 
-            Workbook wb = WorkbookFactory.create(new FileInputStream(DIRECTORY_NAME + sourceName));
-
-            // find the first file that contains BUNO.
-            // If one exists, keep removing the sheet at that index until done
-            int removeFrom = -1;
-            for (int i = 1; i < wb.getNumberOfSheets(); i++) {
-                Sheet sheet = wb.getSheetAt(i);
-                if (sheet.getSheetName().contains("BUNO")) {
-                    removeFrom = i;
-                    break;
-                }
-            }
-            if (removeFrom != -1) while (wb.getNumberOfSheets() - 1 >= removeFrom) wb.removeSheetAt(removeFrom);
+            Workbook wb = WorkbookFactory.create(inputStream);
 
             // get the first sheet in the workbook
             Sheet sheet = wb.getSheetAt(0);
@@ -102,7 +92,7 @@ public class Main {
             // read the sheet to find and create an array of the BUNOs in the sheet
             Reader reader = new Reader(sheet, firstRow);
             List<Buno> bunos = reader.getBunos();
-            System.out.println("\nFound " + bunos.size() + " BUNOs");
+            System.out.println("\nTotal of " + bunos.size() + " BUNOs\n");
 
             // iterate over the list and write a new sheet for each BUNO
             for (Buno buno : bunos) {
@@ -111,30 +101,13 @@ public class Main {
 
                 // sort the list by date of the flight
                 List<CustomRowData> bunoData = bunoReader.getRecords().stream().sorted(Comparator.comparing(CustomRowData::getDate, Date::compareTo)).collect(Collectors.toList());
-                System.out.println("\nFound " + bunoData.size() + " flights for BUNO " + buno.getName());
-
-                // make the sheet
+                System.out.println("Total of " + bunoData.size() + " flights for BUNO " + buno.getName());
 
                 Workbook workbook = new XSSFWorkbook();
 
-//                SheetWriter bunoWriter = new SheetWriter(wb, buno.getName(), bunoData);
                 SheetWriter bunoWriter = new SheetWriter(workbook, buno.getName(), bunoData);
                 bunoWriter.makeSheet();
             }
-
-            // evaluate all formulas
-//            FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
-//            evaluator.evaluateAll();
-
-//            // write to the file
-//            try (OutputStream fileOut = new FileOutputStream(DIRECTORY_NAME + sourceName)) {
-//                System.out.println("\nWriting to disk...");
-//                wb.write(fileOut);
-//            } catch (IOException e) {
-//                System.out.println("IOException while writing workbook " + e.getMessage());
-//                e.printStackTrace();
-//            }
-
         } catch (IOException e) {
             System.out.println("IOException while reading workbook " + e.getMessage());
             e.printStackTrace();

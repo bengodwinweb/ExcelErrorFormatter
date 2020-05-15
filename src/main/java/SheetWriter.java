@@ -46,9 +46,10 @@ public class SheetWriter {
     public SheetWriter(Workbook wb, String bunoName, List<CustomRowData> rowDataList) {
         this.wb = wb;
         this.bunoName = bunoName;
+        this.rowData = rowDataList;
+
         DateTimeFormatter dtf = DateTimeFormat.forPattern("M-d-yy");
         this.sheet = wb.createSheet(dtf.print(new DateTime()));
-        this.rowData = rowDataList;
 
         firstRow = sheet.createRow(0);
         secondRow = sheet.createRow(1);
@@ -72,12 +73,10 @@ public class SheetWriter {
         // for BunoError in localBunoErrors if !errors.contains(bunoError) remove from localBunoErrors
         localBunoErrors.removeIf(bunoError -> !errorsInBuno.contains(bunoError.getCode()));
 
-        int firstErrCol = 3;
-
         // iterate through the array and reset the start and end column
         for (int i = 0; i < localBunoErrors.size(); i++) {
             BunoError e = localBunoErrors.get(i);
-            e.setStartCol(i * 3 + firstErrCol);
+            e.setStartCol(i * 3 + FILE_COL + 2);
             e.setEndCol(e.getStartCol() + 2);
             e.setColor(COLORS_LIST.get(i % COLORS_LIST.size()));
         }
@@ -110,7 +109,7 @@ public class SheetWriter {
         evaluator.evaluateAll();
 
         try (OutputStream fileOut = new FileOutputStream(Main.DIRECTORY_NAME + bunoName + ".xlsx")) {
-            System.out.println("Writing " + bunoName + " to disk...");
+            System.out.println("Writing " + bunoName);
             wb.write(fileOut);
         } catch (IOException e) {
             System.out.println("Exception writing workbook for BUNO " + bunoName);
