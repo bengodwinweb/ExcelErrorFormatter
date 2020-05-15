@@ -13,8 +13,6 @@ public class Main {
 
     static {
         int noErrCol = FILE_COL + 1;
-        int firstErrCol = noErrCol + 1;
-        List<IndexedColors> colors = Arrays.asList(IndexedColors.CORAL, IndexedColors.LIGHT_GREEN, IndexedColors.CORNFLOWER_BLUE, IndexedColors.LIGHT_YELLOW, IndexedColors.LIGHT_ORANGE, IndexedColors.LIGHT_TURQUOISE);
 
         BunoError error06A = new BunoError("06A");
         BunoError error005 = new BunoError("005");
@@ -43,13 +41,6 @@ public class Main {
                 error2A2,
                 error2A3
         ));
-
-        for (int i = 0; i < BunoErrors.size(); i++) {
-            BunoError e = BunoErrors.get(i);
-            e.setStartCol(i * 3 + firstErrCol);
-            e.setEndCol(e.getStartCol() + 2);
-            e.setColor(colors.get(i % colors.size()));
-        }
 
         BunoError errorNoCode1 = new BunoError("No " + BunoErrors.get(0).getCode(), noErrCol, noErrCol, IndexedColors.PLUM);
         BunoErrors.add(errorNoCode1);

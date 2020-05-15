@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class SheetWriter {
+    public static final List<IndexedColors> COLORS_LIST = Arrays.asList(IndexedColors.CORAL, IndexedColors.LIGHT_GREEN, IndexedColors.CORNFLOWER_BLUE, IndexedColors.LIGHT_YELLOW, IndexedColors.LIGHT_ORANGE, IndexedColors.LIGHT_TURQUOISE);
     public static final int NUM_HEADER_ROWS = 3;
     public static final int DATE_COL = 0;
     public static final int FILE_COL = Main.FILE_COL;
@@ -78,6 +79,7 @@ public class SheetWriter {
             BunoError e = localBunoErrors.get(i);
             e.setStartCol(i * 3 + firstErrCol);
             e.setEndCol(e.getStartCol() + 2);
+            e.setColor(COLORS_LIST.get(i % COLORS_LIST.size()));
         }
 
         BunoError noError = Main.BunoErrors.get(Main.BunoErrors.size() - 1);
